@@ -83,3 +83,14 @@ enum class RequestType {
     PREECLAMPSIA_CHECK,
     EMERGENCY_TRIAGE
 }
+
+/**
+ * Device capability level — combines battery, temperature,
+ * and drain rate into one decision for ModelRouter.
+ */
+enum class DeviceCapability {
+    FULL,       // Everything available — use E4B freely
+    REDUCED,    // Conserve — prefer E2B, E4B for clinical only
+    MINIMAL,    // Emergency only — E2B default, E4B for life-threatening
+    THROTTLED   // Overheating — E2B only, reduce frame rate, alert TBA
+}

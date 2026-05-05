@@ -23,6 +23,7 @@ data class UserEntity(
     val language: String = "en",   // Default UI language preference
 
     val pinHash: String,         // Hashed security PIN. Security note: Never store raw PINs locally.
+    val userType: String = "TBA", // diffrentiate between uses "TBA" or "MOTHER"
 
     val createdAt: String,       // Timestamp of account creation
 

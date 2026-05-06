@@ -1,0 +1,16 @@
+{
+  "name": "SurviveMum",
+  "short_name": "SurviveMum",
+  "description": "AI-powered maternal health assistant for Traditional Birth Attendants",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0A0E1A",
+  "theme_color": "#3B82F6",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

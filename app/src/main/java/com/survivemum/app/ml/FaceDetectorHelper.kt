@@ -3,6 +3,7 @@ package com.survivemum.app.ml
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.util.Log
 import androidx.camera.core.ImageProxy
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import com.google.mediapipe.tasks.core.BaseOptions
@@ -22,36 +23,41 @@ class FaceDetectorHelper(private val context: Context) {
     }
 
     private fun setupFaceDetector() {
-        val baseOptionsBuilder = BaseOptions.builder()
-            .setDelegate(com.google.mediapipe.tasks.core.Delegate.GPU)
-        
-        val optionsBuilder = FaceDetector.FaceDetectorOptions.builder()
-            .setBaseOptions(baseOptionsBuilder.build())
-            .setRunningMode(RunningMode.IMAGE) // Synchronous mode for rPPG alignment
+        try {
+            val baseOptionsBuilder = BaseOptions.builder()
+                .setModelAssetPath("face_detection_short_range.tflite")
+            
+            val optionsBuilder = FaceDetector.FaceDetectorOptions.builder()
+                .setBaseOptions(baseOptionsBuilder.build())
+                .setRunningMode(RunningMode.IMAGE)
 
-        faceDetector = FaceDetector.createFromOptions(context, optionsBuilder.build())
+            faceDetector = FaceDetector.createFromOptions(context, optionsBuilder.build())
+        } catch (e: Throwable) {
+            Log.e("FaceDetectorHelper", "Critical: Failed to initialize FaceDetector native libs. This device may not be compatible with MediaPipe Vision.", e)
+        }
     }
 
     fun detect(imageProxy: ImageProxy): Pair<FaceDetectorResult, Bitmap>? {
-        val bitmap = imageProxyToBitmap(imageProxy)
-        val mpImage = BitmapImageBuilder(bitmap).build()
+        if (faceDetector == null) return null
         
-        val result = faceDetector?.detect(mpImage)
-        return if (result != null) {
-            Pair(result, bitmap)
-        } else {
+        return try {
+            val bitmap = imageProxyToBitmap(imageProxy)
+            val mpImage = BitmapImageBuilder(bitmap).build()
+            
+            val result = faceDetector?.detect(mpImage)
+            if (result != null) {
+                Pair(result, bitmap)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("FaceDetectorHelper", "Detection failed", e)
             null
         }
     }
 
     private fun imageProxyToBitmap(image: ImageProxy): Bitmap {
-        // Simple conversion - for a production app, use a more efficient YUV to RGB converter
-        // CameraX 1.4+ provides ImageProxy.toBitmap() but we are using 1.4.1 which should have it
-        // If not, we use the manual way.
-        
         val bitmap = image.toBitmap()
-        
-        // Handle rotation if not handled by toBitmap()
         if (image.imageInfo.rotationDegrees != 0) {
             val matrix = Matrix()
             matrix.postRotate(image.imageInfo.rotationDegrees.toFloat())

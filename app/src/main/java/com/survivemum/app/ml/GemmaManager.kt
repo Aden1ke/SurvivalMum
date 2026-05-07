@@ -1,83 +1,84 @@
 package com.survivemum.app.ml
 
 import android.content.Context
+import android.util.Log
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import java.io.File
+import java.io.FileOutputStream
 
 /**
  * GemmaManager handles the offline Gemma 4 model.
- * Responsible for 128K context management and inference.
+ * Responsible for context management and inference.
  */
 class GemmaManager(private val context: Context) {
 
     private var llmInference: LlmInference? = null
-    private val maxContextTokens = 128000 
+    private val maxContextTokens = 32768 
 
-    fun initializeModel(modelPath: String) {
-        val options = LlmInference.LlmInferenceOptions.builder()
-            .setModelPath(modelPath)
-            .setMaxTokens(maxContextTokens)
-            .build()
+    fun initializeModel(modelName: String) {
+        try {
+            Log.d("GemmaManager", "Starting model initialization check for $modelName...")
+            val localModelPath = getLocalModelPath(modelName)
+            
+            val options = LlmInference.LlmInferenceOptions.builder()
+                .setModelPath(localModelPath)
+                .setMaxTokens(maxContextTokens)
+                .build()
 
-        llmInference = LlmInference.createFromOptions(context, options)
+            llmInference = LlmInference.createFromOptions(context, options)
+            Log.d("GemmaManager", "Gemma 4 successfully loaded into memory.")
+        } catch (e: Throwable) {
+            Log.e("GemmaManager", "CRITICAL ERROR: Failed to load Gemma 4 engine. This usually means the device architecture is unsupported or the 1.3GB model file is corrupted.", e)
+        }
     }
 
     /**
-     * Generates a response considering the long pregnancy context.
-     * @param pregnancyHistory Structured clinical history (vitals, ANC card data, etc.)
-     * @param currentQuery The current observation or TBA question
+     * Ensures the model is available on the local filesystem.
+     * MediaPipe LLM Inference often requires an absolute path rather than an asset URI.
      */
+    private fun getLocalModelPath(modelName: String): String {
+        val file = File(context.filesDir, modelName)
+        if (!file.exists()) {
+            Log.d("GemmaManager", "First-time setup: Copying 1.3GB model to internal storage. DO NOT CLOSE THE APP.")
+            context.assets.open(modelName).use { inputStream ->
+                FileOutputStream(file).use { outputStream ->
+                    val buffer = ByteArray(8 * 1024)
+                    var bytesRead: Int
+                    var totalCopied = 0L
+                    while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                        outputStream.write(buffer, 0, bytesRead)
+                        totalCopied += bytesRead
+                        // Log every 100MB
+                        if (totalCopied % (100 * 1024 * 1024) < buffer.size) {
+                            Log.d("GemmaManager", "Copy progress: ${totalCopied / (1024 * 1024)} MB copied...")
+                        }
+                    }
+                }
+            }
+            Log.d("GemmaManager", "Model storage copy complete.")
+        }
+        return file.absolutePath
+    }
+
     fun assess(pregnancyHistory: String, currentQuery: String): String {
         val systemPrompt = """
-            You are SurviveMum AI, an expert maternal and neonatal health guardian.
-            You have a 128K long context window allowing you to see the entire pregnancy history.
+            You are SurviveMum AI, an expert maternal health guardian.
             
             PREGNANCY HISTORY:
             $pregnancyHistory
             
             INSTRUCTIONS:
-            1. Analyze trends in blood pressure, weight, and fetal movement.
-            2. Cross-reference observations with WHO guidelines.
-            3. Provide clear clinical reasoning (Thinking Traces).
-            4. Flag danger signs immediately.
+            1. Analyze trends.
+            2. Provide Thinking Traces.
+            3. Flag danger signs immediately.
         """.trimIndent()
 
-        val fullPrompt = "$systemPrompt\n\nCURRENT OBSERVATION/QUESTION:\n$currentQuery\n\nASSESSMENT:"
+        val fullPrompt = "$systemPrompt\n\nCURRENT OBSERVATION:\n$currentQuery\n\nASSESSMENT:"
         
         return try {
-            llmInference?.generateResponse(fullPrompt) ?: "Model not initialized"
+            llmInference?.generateResponse(fullPrompt) ?: "AI Model is loading or failed to initialize."
         } catch (e: Exception) {
             "Inference Error: ${e.message}"
         }
-    }
-
-    /**
-     * Multimodal support (Interleaved).
-     * Since on-device multimodal often uses specialized embedding or tag-based injection.
-     */
-    fun assessMultimodal(
-        pregnancyHistory: String,
-        ancCardData: String,
-        vitals: String,
-        images: List<File> // In a real scenario, these would be encoded or processed
-    ): String {
-        // Construct interleaved prompt representation
-        val prompt = StringBuilder()
-        prompt.append("HISTORY:\n$pregnancyHistory\n")
-        prompt.append("LATEST VITALS:\n$vitals\n")
-        prompt.append("ANC CARD DATA (OCR'd):\n$ancCardData\n")
-        
-        // In some multimodal LLMs, images are represented by special tokens
-        images.forEachIndexed { index, _ ->
-            prompt.append("[IMAGE_$index] ")
-        }
-        
-        prompt.append("\nBased on the above history and the current visual/audio evidence, provide a health assessment.")
-        
-        return generateResponse(prompt.toString())
-    }
-
-    private fun generateResponse(prompt: String): String {
-        return llmInference?.generateResponse(prompt) ?: "Model not initialized"
     }
 }

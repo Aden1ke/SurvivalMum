@@ -9,7 +9,7 @@ activityCompose = "1.8.0"
 kotlin = "2.2.10"
 composeBom = "2026.02.01"
 camerax = "1.4.1"
-mediapipe = "0.10.20"
+mediapipe = "0.10.35"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

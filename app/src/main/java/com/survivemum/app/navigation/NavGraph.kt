@@ -4,15 +4,17 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.survivemum.app.ui.screens.DashboardScreen
+import com.survivemum.app.ui.screens.AlertScreen
 import com.survivemum.app.ui.screens.CameraMonitorScreen
 
 sealed class Screen(val route: String) {
-    object CameraMonitor : Screen("camera_monitor")
+    object Dashboard : Screen("dashboard")
+    object MotherMonitor : Screen("mother_monitor")
     object Alert : Screen("alert")
-    object ANCScanner : Screen("anc_scanner")
-    object Referral : Screen("referral")
-    object Emergency : Screen("emergency")
-    object Newborn : Screen("newborn")
+    object NewbornMonitor : Screen("newborn_monitor")
+    object ToddlerMonitor : Screen("toddler_monitor")
+    object Timeline : Screen("timeline")
     object QRCode : Screen("qr_code")
 }
 
@@ -20,18 +22,28 @@ sealed class Screen(val route: String) {
 fun NavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.CameraMonitor.route
+        startDestination = Screen.Dashboard.route
     ) {
-        composable(Screen.CameraMonitor.route) {
-            CameraMonitorScreen(navController)
+        composable(Screen.Dashboard.route) {
+            DashboardScreen(navController)
         }
         
-        // Placeholder routes for other screens
-        composable(Screen.Alert.route) { /* AlertScreen() */ }
-        composable(Screen.ANCScanner.route) { /* ANCScannerScreen() */ }
-        composable(Screen.Referral.route) { /* ReferralScreen() */ }
-        composable(Screen.Emergency.route) { /* EmergencyScreen() */ }
-        composable(Screen.Newborn.route) { /* NewbornScreen() */ }
-        composable(Screen.QRCode.route) { /* QRCodeScreen() */ }
+        composable(Screen.MotherMonitor.route) {
+            MotherMonitorScreen(navController)
+        }
+        
+        composable(Screen.Alert.route) {
+            AlertScreen(navController)
+        }
+        
+        // Lifecycle placeholders
+        composable(Screen.NewbornMonitor.route) {
+            NewbornMonitorScreen(navController)
+        }
+        composable(Screen.ToddlerMonitor.route) { /* ToddlerMonitorScreen() */ }
+        composable(Screen.Timeline.route) { /* TimelineScreen() */ }
+        composable(Screen.QRCode.route) {
+            QRCodeScreen(navController)
+        }
     }
 }

@@ -13,10 +13,12 @@
 .externalNativeBuild
 .cxx
 local.properties
-
 # App build
 /app/build/
-
+caches/
+daemon/
+wrapper/dists/
+kotlin-profile/
 # Full IDE config
 /.idea/
 

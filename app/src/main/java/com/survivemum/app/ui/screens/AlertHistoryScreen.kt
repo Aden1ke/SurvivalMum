@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.survivemum.app.data.AlertEntity
 import com.survivemum.app.data.SurviveMumDatabase
 import com.survivemum.app.ui.theme.*
@@ -130,6 +131,64 @@ fun AlertHistoryScreen(navController: NavController, patientId: String) {
                     AlertTimelineCard(alert = alert)
                 }
                 item { Spacer(modifier = Modifier.height(40.dp)) }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun AlertTimelineCard(alert: AlertEntity) {
+    val severityColor = when (alert.severity) {
+        "CRITICAL" -> Color(0xFFD32F2F)
+        "HIGH" -> Color(0xFFF57C00)
+        "MEDIUM" -> Color(0xFFFBC02D)
+        else -> Color(0xFF388E3C)
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Severity indicator bar
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .fillMaxHeight()
+                    .background(severityColor, RoundedCornerShape(2.dp))
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = alert.severity,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = severityColor
+                    )
+                    Text(
+                        text = alert.timestamp,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = alert.message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
     }

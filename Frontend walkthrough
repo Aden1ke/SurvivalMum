@@ -1,0 +1,36 @@
+# SurviveMum: AI Medical OS Redesign Walkthrough
+
+The SurviveMum frontend has been completely overhauled to feel like a sophisticated medical operating system. The redesign focuses on transparency, trust, and professional medical immersion.
+
+## Key Design Pillars
+
+### 1. Maternal OS: Immersive Monitor
+- **[MotherMonitorScreen.kt](file:///c:/Users/sheut/SurvivalMum/app/src/main/java/com/survivemum/app/ui/screens/MotherMonitorScreen.kt)**: A cinematic, full-screen monitoring experience that transforms the phone into a medical diagnostic tool.
+- **Floating Vitals**: Real-time heart rate, respiratory rate, and SpO2 cards that "float" over the camera feed, providing a medically immersive feel.
+- **Risk Escalation**: Features seamless visual transitions and background "tinting" that responds to detected risks (Normal → Warning → Critical).
+- **AI Intelligence**: Includes a real-time scanning line and AI activity badges to communicate active on-device processing by Gemma 4.
+
+### 2. Transparent AI Reasoning
+- **[ThinkingTracePanel.kt](file:///c:/Users/sheut/SurvivalMum/app/src/main/java/com/survivemum/app/ui/components/ThinkingTracePanel.kt)**: A signature component that visualizes the logical steps taken by the AI to reach a diagnosis.
+- **[AlertScreen.kt](file:///c:/Users/sheut/SurvivalMum/app/src/main/java/com/survivemum/app/ui/screens/AlertScreen.kt)**: The 'AI Doctor' interface. It avoids generic error messages in favor of clear reasoning, confidence scores, and prioritized clinical actions.
+
+### 3. Lifecycle-Based Navigation
+- Updated **[NavGraph.kt](file:///c:/Users/sheut/SurvivalMum/app/src/main/java/com/survivemum/app/navigation/NavGraph.kt)** to support the lifecycle pillars. This ensures health workers can track a patient from pregnancy through toddlerhood.
+
+## Implemented Components
+
+- **AIStatusIndicator**: Visible offline branding for trust and transparency.
+- **ThinkingTracePanel**: High-fidelity reasoning visualization.
+- **CriticalActionButton**: Large, accessible buttons for high-pressure emergency scenarios.
+- **MonitoringSummaryCard**: At-a-glance status for each lifecycle module.
+
+## Architecture Improvements
+
+- **MVVM Integration**: Screens are decoupled from data logic, allowing for highly responsive UI even on low-end devices.
+- **Material 3 Utility**: Consistent use of the design system prevents hardcoded styles and ensures high accessibility contrast.
+
+### 4. Portable Health Record System
+- **[QRCodeScreen.kt](file:///c:/Users/sheut/SurvivalMum/app/src/main/java/com/survivemum/app/ui/screens/QRCodeScreen.kt)**: A critical module for offline healthcare continuity. It generates a portable health record that can be scanned by other health workers.
+- **Patient Identity**: Features high-contrast cards showing maternal age, pregnancy week, blood type, and critical allergies.
+- **Timeline Integration**: Records are automatically linked to the patient's lifecycle journey, providing context for each medical event.
+- **Offline Scanning**: Includes a specialized scanner interface designed for fast, reliable data retrieval in disconnected environments.

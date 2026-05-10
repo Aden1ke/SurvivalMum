@@ -22,9 +22,16 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.survivemum.app.ml.CameraManager
 import com.survivemum.app.ml.GemmaManager
 import com.survivemum.app.ml.VitalAnalyzer
+import com.survivemum.app.ui.screens.HomeDashboardScreen
+import com.survivemum.app.ui.screens.LoginScreen
+import com.survivemum.app.ui.screens.SignupScreen
+import com.survivemum.app.ui.screens.UserTypeScreen
 import com.survivemum.app.ui.theme.SurvivalMumTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

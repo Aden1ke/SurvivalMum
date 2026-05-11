@@ -48,10 +48,10 @@ private val SurviveMumLightColors = lightColorScheme(
 
 //  DARK THEME 
 private val SurviveMumDarkColors = darkColorScheme(
-    primary = SurviveMumRed,
-    onPrimary = SurviveMumWhite,
+    primary = Color(0xFFF3C1BB),
+    onPrimary = Color(0xFF2C1A1F),
     primaryContainer = AlertCritical,
-    onPrimaryContainer = SurviveMumWhite,
+    onPrimaryContainer = Color(0xFFF3C1BB),
 
     secondary = MotherPrimary,
     onSecondary = SurviveMumWhite,
@@ -66,13 +66,13 @@ private val SurviveMumDarkColors = darkColorScheme(
     background = SurviveMumDark,
     onBackground = SurviveMumWhite,
 
-    surface = Color(0xFF1A1A2E),
+    surface = Color(0xFF2C1A1F),
     onSurface = SurviveMumWhite,
-    surfaceVariant = Color(0xFF2C2C4A),
+    surfaceVariant = Color(0xFF3D2328),
     onSurfaceVariant = TextSecondary,
 
-    outline = Color(0xFF444466),
-    outlineVariant = Color(0xFF2C2C4A),
+    outline = Color(0xFF5C3840),
+    outlineVariant = Color(0xFF3D2328),
 
     error = AlertHigh,
     onError = SurviveMumWhite,

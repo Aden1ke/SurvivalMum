@@ -9,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -115,7 +114,6 @@ fun LoginScreen(navController: NavController, userType: String) {
                             .background(
                                 when (key) {
                                     "✓" -> MaterialTheme.colorScheme.primary
-                                    "⌫" -> MaterialTheme.colorScheme.surfaceVariant
                                     else -> MaterialTheme.colorScheme.surfaceVariant
                                 }
                             ),
@@ -125,9 +123,7 @@ fun LoginScreen(navController: NavController, userType: String) {
                             onClick = {
                                 when (key) {
                                     "⌫" -> {
-                                        if (pin.isNotEmpty()) {
-                                            pin = pin.dropLast(1)
-                                        }
+                                        if (pin.isNotEmpty()) pin = pin.dropLast(1)
                                         errorMessage = ""
                                     }
                                     "✓" -> {
@@ -135,21 +131,15 @@ fun LoginScreen(navController: NavController, userType: String) {
                                             isLoading = true
                                             scope.launch {
                                                 try {
-                                                    val db = SurviveMumDatabase
-                                                        .getDatabase(context)
-                                                    val user = db.userDao()
-                                                        .getCurrentUser()
-                                                    if (user != null &&
-                                                        user.pinHash == pin) {
+                                                    val db = SurviveMumDatabase.getDatabase(context)
+                                                    val user = db.userDao().getCurrentUser()
+                                                    if (user != null && user.pinHash == pin) {
                                                         db.userDao().updateLastLogin(
                                                             user.userId,
-                                                            System.currentTimeMillis()
-                                                                .toString()
+                                                            System.currentTimeMillis().toString()
                                                         )
                                                         isLoading = false
-                                                        navController.navigate(
-                                                            "home/${user.userType}"
-                                                        ) {
+                                                        navController.navigate("home/${user.userType}") {
                                                             popUpTo("login/$userType") {
                                                                 inclusive = true
                                                             }
@@ -181,7 +171,7 @@ fun LoginScreen(navController: NavController, userType: String) {
                             if (isLoading && key == "✓") {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.onPrimary,  // CHANGED
                                     strokeWidth = 2.dp
                                 )
                             } else {
@@ -190,7 +180,7 @@ fun LoginScreen(navController: NavController, userType: String) {
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = when (key) {
-                                        "✓" -> Color.White
+                                        "✓" -> MaterialTheme.colorScheme.onPrimary  // CHANGED
                                         else -> MaterialTheme.colorScheme.onBackground
                                     }
                                 )
@@ -204,12 +194,14 @@ fun LoginScreen(navController: NavController, userType: String) {
         Spacer(modifier = Modifier.height(32.dp))
 
         TextButton(
-            onClick = { navController.navigate("signup/$userType") }
+            onClick = { navController.navigate("signup/$userType") },
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = "New user? Create account",
                 color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
             )
         }
     }

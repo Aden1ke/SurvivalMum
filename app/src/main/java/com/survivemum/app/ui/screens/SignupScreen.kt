@@ -8,13 +8,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import com.survivemum.app.ui.theme.SurviveMumTextField
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -31,7 +32,6 @@ fun SignupScreen(navController: NavController, userType: String) {
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
-    // Form fields
     var fullName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var facilityName by remember { mutableStateOf("") }
@@ -40,7 +40,6 @@ fun SignupScreen(navController: NavController, userType: String) {
     var confirmPin by remember { mutableStateOf("") }
     var selectedLanguage by remember { mutableStateOf("en") }
 
-    // UI state
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     var showLanguageDropdown by remember { mutableStateOf(false) }
@@ -55,7 +54,6 @@ fun SignupScreen(navController: NavController, userType: String) {
         "pcm" to "Nigerian Pidgin"
     )
 
-    // Validation
     fun validate(): Boolean {
         return when {
             fullName.isBlank() -> {
@@ -84,19 +82,18 @@ fun SignupScreen(navController: NavController, userType: String) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFDFEFE))
+            .background(MaterialTheme.colorScheme.background)  // CHANGED
             .verticalScroll(scrollState)
             .padding(24.dp)
     ) {
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Header
         Text(
             text = if (isTBA) "TBA Registration" else "Mother Registration",
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF1A1A2E)
+            color = MaterialTheme.colorScheme.onBackground  // CHANGED
         )
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -107,12 +104,11 @@ fun SignupScreen(navController: NavController, userType: String) {
             else
                 "Create your account to monitor your pregnancy",
             fontSize = 14.sp,
-            color = Color(0xFF717D7E)
+            color = MaterialTheme.colorScheme.onSurfaceVariant  // CHANGED
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Full Name
         SurviveMumTextField(
             value = fullName,
             onValueChange = { fullName = it },
@@ -122,7 +118,6 @@ fun SignupScreen(navController: NavController, userType: String) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Phone Number
         SurviveMumTextField(
             value = phoneNumber,
             onValueChange = { phoneNumber = it },
@@ -133,7 +128,6 @@ fun SignupScreen(navController: NavController, userType: String) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Facility — TBA only
         if (isTBA) {
             SurviveMumTextField(
                 value = facilityName,
@@ -144,7 +138,6 @@ fun SignupScreen(navController: NavController, userType: String) {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Community
         SurviveMumTextField(
             value = community,
             onValueChange = { community = it },
@@ -154,12 +147,11 @@ fun SignupScreen(navController: NavController, userType: String) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Language Selector
         Text(
             text = "Language",
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF1A1A2E)
+            color = MaterialTheme.colorScheme.onBackground  // CHANGED
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -169,7 +161,7 @@ fun SignupScreen(navController: NavController, userType: String) {
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color(0xFF1A1A2E)
+                    contentColor = MaterialTheme.colorScheme.onBackground  // CHANGED
                 )
             ) {
                 Text(
@@ -197,17 +189,16 @@ fun SignupScreen(navController: NavController, userType: String) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // PIN
         Text(
             text = "Create a 4-digit PIN",
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF1A1A2E)
+            color = MaterialTheme.colorScheme.onBackground  // CHANGED
         )
         Text(
             text = "Used to protect your patient data",
             fontSize = 12.sp,
-            color = Color(0xFF717D7E)
+            color = MaterialTheme.colorScheme.onSurfaceVariant  // CHANGED
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -223,14 +214,13 @@ fun SignupScreen(navController: NavController, userType: String) {
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFC0392B),
-                unfocusedBorderColor = Color(0xFFDDDDDD)
+                focusedBorderColor = MaterialTheme.colorScheme.primary,      // CHANGED
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline      // CHANGED
             )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Confirm PIN
         OutlinedTextField(
             value = confirmPin,
             onValueChange = { if (it.length <= 4) confirmPin = it },
@@ -243,24 +233,22 @@ fun SignupScreen(navController: NavController, userType: String) {
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFC0392B),
-                unfocusedBorderColor = Color(0xFFDDDDDD)
+                focusedBorderColor = MaterialTheme.colorScheme.primary,      // CHANGED
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline      // CHANGED
             )
         )
 
-        // Error Message
         if (errorMessage.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = errorMessage,
-                color = Color(0xFFC0392B),
+                color = MaterialTheme.colorScheme.error,  // CHANGED
                 fontSize = 13.sp
             )
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Create Account Button
         Button(
             onClick = {
                 if (validate()) {
@@ -268,11 +256,9 @@ fun SignupScreen(navController: NavController, userType: String) {
                     scope.launch {
                         try {
                             val db = SurviveMumDatabase.getDatabase(context)
-
                             val userId = UUID.randomUUID().toString()
                             val now = System.currentTimeMillis().toString()
 
-                            // Save user to database
                             val user = UserEntity(
                                 userId = userId,
                                 fullName = fullName,
@@ -280,7 +266,7 @@ fun SignupScreen(navController: NavController, userType: String) {
                                 facilityName = facilityName,
                                 community = community,
                                 language = selectedLanguage,
-                                pinHash = pin, // BE-2 will hash this properly
+                                pinHash = pin,
                                 userType = userType,
                                 createdAt = now,
                                 lastLoginAt = now,
@@ -289,7 +275,6 @@ fun SignupScreen(navController: NavController, userType: String) {
 
                             db.userDao().insertUser(user)
 
-                            // Save preferences
                             val prefs = PreferenceEntity(
                                 userId = userId,
                                 language = selectedLanguage,
@@ -301,7 +286,6 @@ fun SignupScreen(navController: NavController, userType: String) {
 
                             isLoading = false
 
-                            // Navigate to home
                             navController.navigate("home/$userType") {
                                 popUpTo("usertype") { inclusive = true }
                             }
@@ -318,85 +302,41 @@ fun SignupScreen(navController: NavController, userType: String) {
                 .height(56.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFC0392B)
+                containerColor = MaterialTheme.colorScheme.primary  // CHANGED
             ),
             enabled = !isLoading
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
-                    color = Color.White,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
                     strokeWidth = 2.dp
                 )
             } else {
                 Text(
                     text = "Create Account",
-                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    fontSize = 16.sp
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Already have account
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
+        // CENTERED — Already have an account
+        TextButton(
+            onClick = { navController.navigate("login/$userType") },
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Already have an account? ",
-                color = Color(0xFF717D7E),
-                fontSize = 14.sp
+                text = "Already have an account? Log in",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
             )
-            TextButton(
-                onClick = { navController.navigate("login/$userType") },
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Text(
-                    text = "Log in",
-                    color = Color(0xFFC0392B),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
         }
 
-        Spacer(modifier = Modifier.height(40.dp))
-    }
-}
-
-// Reusable text field component
-@Composable
-fun SurviveMumTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    placeholder: String,
-    keyboardType: KeyboardType = KeyboardType.Text
-) {
-    Column {
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF1A1A2E)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(placeholder, color = Color(0xFFBDC3C7)) },
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFC0392B),
-                unfocusedBorderColor = Color(0xFFDDDDDD),
-                focusedLabelColor = Color(0xFFC0392B)
-            )
-        )
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }

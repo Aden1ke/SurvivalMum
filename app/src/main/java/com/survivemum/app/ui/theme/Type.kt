@@ -111,8 +111,8 @@ val SurviveMumTypography = Typography(
     // Tiny labels — offline status, captions
     labelSmall = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        fontSize = 12.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.5.sp
     )

@@ -6,6 +6,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import com.survivemum.app.ui.screens.DesignSystemDemoScreen
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
@@ -68,6 +73,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SurvivalMumTheme {
+<<<<<<< fs-screens-database
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
@@ -88,6 +94,19 @@ class MainActivity : ComponentActivity() {
                         val userType = backStackEntry.arguments?.getString("userType") ?: "TBA"
                         HomeDashboardScreen(navController = navController, userType = userType)
                     }
+=======
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    DesignSystemDemoScreen()
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    CameraScreen(
+                        cameraExecutor = cameraExecutor,
+                        gemmaManager = gemmaManager,
+                        modifier = Modifier.padding(innerPadding)
+                    )
+>>>>>>> master
                 }
             }
         }

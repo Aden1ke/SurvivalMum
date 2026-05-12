@@ -11,6 +11,9 @@ import android.util.Log
 import com.survivemum.app.security.models.Alert
 import com.survivemum.app.security.models.AlertPriority
 import com.survivemum.app.security.models.RecommendedAction
+import com.survivemum.app.security.safety.SafetyScreener
+import com.survivemum.app.security.models.SafetyResult
+import com.survivemum.app.security.models.SafetyVerdict
 
 /**
  * AlertDispatcher — queues alerts and delivers them through available channels.
@@ -26,7 +29,10 @@ import com.survivemum.app.security.models.RecommendedAction
  *
  * The TBA never manages delivery manually — the system handles everything silently.
  */
-class AlertDispatcher(private val context: Context) {
+class AlertDispatcher(
+    private val context: Context,
+    private val safetyScreener: SafetyScreener
+) {
 
     companion object {
         private const val TAG = "AlertDispatcher"
@@ -38,18 +44,96 @@ class AlertDispatcher(private val context: Context) {
     private var isListening = false
 
     /**
-     * Queue an alert for delivery.
-     * Prioritizes the queue and immediately attempts delivery
-     * through the best available channel.
+     * Queue an alert for delivery, gated by safety screening.
+     *
+     * Every alert passes through SafetyScreener.screenOutput before queuing:
+     *   - SAFE     → queued and delivered normally
+     *   - FLAGGED  → queued and delivered, but the safety result is recorded
+     *                on the alert so the audit trail captures it
+     *   - UNSAFE   → original alert is DROPPED. A fallback alert is queued
+     *                instead so the TBA is told to assess manually rather than
+     *                receiving a silent drop.
+     *
+     * Screening text is built from the alert's summary and reasoning fields,
+     * which are the only free-form content Gemma generated. Other fields
+     * (priority, type, patient ID) are structured and not screened.
      */
     fun queueAlert(alert: Alert) {
+        val screeningText = buildString {
+            append(alert.summary)
+            append("\n\n")
+            append(alert.reasoning)
+        }
+
+        val safetyResult = safetyScreener.screenOutput(screeningText)
+
+        when (safetyResult.verdict) {
+            SafetyVerdict.SAFE -> {
+                // Normal flow — record the screening result on the alert
+                val screened = alert.copy(safetyResult = safetyResult)
+                enqueueAndDeliver(screened)
+                Log.d(TAG, "Alert ${alert.alertId} passed safety screen — queued")
+            }
+
+            SafetyVerdict.FLAGGED -> {
+                // Borderline content — deliver but record the flag for audit
+                val screened = alert.copy(safetyResult = safetyResult)
+                enqueueAndDeliver(screened)
+                Log.w(
+                    TAG,
+                    "Alert ${alert.alertId} FLAGGED but queued: ${safetyResult.reason}"
+                )
+            }
+
+            SafetyVerdict.UNSAFE -> {
+                // Drop the original alert — its content is unsafe to deliver.
+                // Replace with a fallback so the TBA isn't left with nothing.
+                Log.e(
+                    TAG,
+                    "Alert ${alert.alertId} BLOCKED by safety screen: ${safetyResult.reason}"
+                )
+                val fallback = buildFallbackAlert(alert, safetyResult)
+                enqueueAndDeliver(fallback)
+            }
+        }
+    }
+
+    /**
+     * Internal: add to queue, prioritize, and attempt delivery.
+     * Extracted from the old queueAlert body so the screening branches above
+     * can each call it without duplicating logic.
+     */
+    private fun enqueueAndDeliver(alert: Alert) {
         alertQueue.add(alert)
         retryCount[alert.alertId] = 0
-
-        Log.d(TAG, "Alert queued: ${alert.type} | Priority: ${alert.priority} | Patient: ${alert.patientId}")
-
         prioritizeQueue()
         attemptDelivery()
+    }
+
+    /**
+     * Build a fallback alert when the original was blocked by safety screening.
+     *
+     * The fallback preserves patient ID, priority, recipient, and timestamp so
+     * the TBA still knows WHO to check on and HOW URGENTLY. The clinical content
+     * is replaced with a manual-assessment prompt because we cannot trust Gemma's
+     * generated reasoning when the screener flagged it as unsafe.
+     *
+     * The original alert's safety result is preserved on the fallback so the
+     * audit log can show why the original was blocked.
+     */
+    private fun buildFallbackAlert(original: Alert, blockedResult: SafetyResult): Alert {
+        return original.copy(
+            alertId = java.util.UUID.randomUUID().toString(),  // new ID — distinct event
+            summary = "Manual assessment needed",
+            reasoning = "The AI flagged a potential concern for this patient but " +
+                    "the generated assessment did not pass safety review. Please " +
+                    "assess patient ${original.patientId} manually and consult " +
+                    "your usual referral protocol.",
+            confidence = 0.0,           // we are not confident — that's the point
+            safetyResult = blockedResult, // preserve the blocked result for audit
+            sent = false,
+            sentAt = null
+        )
     }
 
     /**

@@ -3,7 +3,7 @@ package com.survivemum.app.model
 import androidx.compose.runtime.Immutable
 import com.survivemum.app.ui.components.ReasoningStep
 
-@Immutable
+/*@Immutable
 data class VitalsState(
     val hr: Int = 0,
     val spo2: Int = 0,
@@ -11,7 +11,7 @@ data class VitalsState(
     val temp: Double = 37.0,
     val bp: String = "120/80",
     val timestamp: Long = System.currentTimeMillis()
-)
+)*/
 
 @Immutable
 data class NewbornUIState(

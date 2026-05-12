@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.survivemum.app.ui.components.AIStatusIndicator
+import com.survivemum.app.navigation.Screen
 
 @Composable
 fun DashboardScreen(navController: NavController) {

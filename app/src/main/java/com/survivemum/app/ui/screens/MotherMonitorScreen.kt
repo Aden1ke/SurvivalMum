@@ -27,6 +27,7 @@ import com.survivemum.app.ui.components.AIStatusIndicator
 import com.survivemum.app.ui.components.ThinkingTracePanel
 import com.survivemum.app.viewmodel.MotherMonitorViewModel
 import com.survivemum.app.viewmodel.RiskLevel
+import androidx.compose.foundation.BorderStroke
 
 @Composable
 fun MotherMonitorScreen(

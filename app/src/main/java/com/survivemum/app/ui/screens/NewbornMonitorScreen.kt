@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +28,7 @@ import androidx.navigation.NavController
 import com.survivemum.app.ui.components.AIStatusIndicator
 import com.survivemum.app.ui.components.ThinkingTracePanel
 import com.survivemum.app.viewmodel.NewbornViewModel
+
 
 @Composable
 fun NewbornMonitorScreen(
@@ -51,7 +53,7 @@ fun NewbornMonitorScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
                         Text(
                             text = "NEONATAL CONSOLE",
@@ -244,7 +246,7 @@ fun CryAnalysisCard(status: String, confidence: Int) {
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
                 LinearProgressIndicator(
-                    progress = confidence / 100f,
+                    progress = { confidence / 100f },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(4.dp)
@@ -308,33 +310,34 @@ fun JaundiceMeter(risk: Double) {
 
 @Composable
 fun AnimatedWaveform(data: List<Float>, color: Color) {
-    val strokeWidth = 2.dp
-    Spacer(
+    val strokeWidthDp = 2.dp
+
+    Canvas(
         modifier = Modifier
             .fillMaxSize()
             .padding(vertical = 20.dp)
-            .drawWithCache {
-                val path = Path()
-                onDrawBehind {
-                    if (data.isNotEmpty()) {
-                        val width = size.width
-                        val height = size.height
-                        val step = width / (data.size - 1)
-                        
-                        path.reset()
-                        path.moveTo(0f, height / 2 + (data[0] - 0.5f) * height)
-                        
-                        data.forEachIndexed { index, value ->
-                            path.lineTo(index * step, height / 2 + (value - 0.5f) * height)
-                        }
-                        
-                        drawPath(
-                            path = path,
-                            color = color,
-                            style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
-                        )
-                    }
-                }
+    ) {
+        if (data.isNotEmpty()) {
+            val strokeWidthPx = strokeWidthDp.toPx()
+            val width = size.width
+            val height = size.height
+            val step = width / (data.size - 1).coerceAtLeast(1)
+
+            val path = Path()
+            path.moveTo(0f, height / 2 + (data[0] - 0.5f) * height)
+
+            data.forEachIndexed { index, value ->
+                path.lineTo(index * step, height / 2 + (value - 0.5f) * height)
             }
-    )
+
+            drawPath(
+                path = path,
+                color = color,
+                style = Stroke(
+                    width = strokeWidthPx,
+                    cap = StrokeCap.Round
+                )
+            )
+        }
+    }
 }

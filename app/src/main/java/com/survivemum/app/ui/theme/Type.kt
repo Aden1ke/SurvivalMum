@@ -7,8 +7,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 val SurviveMumTypography = Typography(
-
-    // Large titles — screen headers
     headlineLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
@@ -16,17 +14,13 @@ val SurviveMumTypography = Typography(
         lineHeight = 40.sp,
         letterSpacing = 0.sp
     ),
-
-    // Screen titles
     headlineMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
-        fontSize = 26.sp,
-        lineHeight = 34.sp,
+        fontSize = 28.sp,
+        lineHeight = 36.sp,
         letterSpacing = 0.sp
     ),
-
-    // Card titles and section headers
     headlineSmall = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
@@ -34,8 +28,6 @@ val SurviveMumTypography = Typography(
         lineHeight = 30.sp,
         letterSpacing = 0.sp
     ),
-
-    // Alert type labels — large, must be readable fast
     titleLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
@@ -43,8 +35,6 @@ val SurviveMumTypography = Typography(
         lineHeight = 28.sp,
         letterSpacing = 0.sp
     ),
-
-    // Patient name, section labels
     titleMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.SemiBold,
@@ -52,8 +42,6 @@ val SurviveMumTypography = Typography(
         lineHeight = 24.sp,
         letterSpacing = 0.15.sp
     ),
-
-    // Form labels, card subtitles
     titleSmall = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Medium,
@@ -61,9 +49,6 @@ val SurviveMumTypography = Typography(
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp
     ),
-
-    // Body text — clinical notes, descriptions
-    // LARGER than default — TBAs must read in poor light
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
@@ -71,8 +56,6 @@ val SurviveMumTypography = Typography(
         lineHeight = 26.sp,
         letterSpacing = 0.5.sp
     ),
-
-    // Secondary body — thinking traces, metadata
     bodyMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
@@ -80,8 +63,6 @@ val SurviveMumTypography = Typography(
         lineHeight = 22.sp,
         letterSpacing = 0.25.sp
     ),
-
-    // Small details — timestamps, source citations
     bodySmall = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
@@ -89,8 +70,6 @@ val SurviveMumTypography = Typography(
         lineHeight = 18.sp,
         letterSpacing = 0.4.sp
     ),
-
-    // Button text
     labelLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
@@ -98,8 +77,6 @@ val SurviveMumTypography = Typography(
         lineHeight = 24.sp,
         letterSpacing = 0.1.sp
     ),
-
-    // Badge labels — risk level, severity
     labelMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
@@ -107,8 +84,6 @@ val SurviveMumTypography = Typography(
         lineHeight = 16.sp,
         letterSpacing = 0.5.sp
     ),
-
-    // Tiny labels — offline status, captions
     labelSmall = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
@@ -116,4 +91,12 @@ val SurviveMumTypography = Typography(
         lineHeight = 16.sp,
         letterSpacing = 0.5.sp
     )
+)
+
+val EmergencyAlertStyle = TextStyle(
+    fontFamily = FontFamily.Default,
+    fontWeight = FontWeight.Black,
+    fontSize = 20.sp,
+    lineHeight = 28.sp,
+    letterSpacing = 0.5.sp
 )

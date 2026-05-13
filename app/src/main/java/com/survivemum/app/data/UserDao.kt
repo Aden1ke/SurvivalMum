@@ -2,44 +2,52 @@ package com.survivemum.app.data
 
 import androidx.room.*
 
-/**
- * Data Access Object for User operations.
- * Manages authentication and user profile retrieval.
- */
 @Dao
 interface UserDao {
 
-    /**
-     * Saves or updates a user profile.
-     * Used during the initial onboarding or when syncing profile updates from the server.
-     */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: UserEntity)
 
-    /**
-     * Finds a user by their specific ID.
-     */
-    @Query("SELECT * FROM users WHERE userId = :userId")
-    suspend fun getUser(userId: String): UserEntity?
+    // Returns the most-recently-active user of a specific type.
+    // This is the fix for issue 5: a TBA PIN no longer unlocks a mother account
+    // because we scope the lookup to the userType the login screen was opened with.
+    @Query("""
+        SELECT * FROM users 
+        WHERE userType = :userType 
+          AND isActive = 1 
+        ORDER BY lastLoginAt DESC 
+        LIMIT 1
+    """)
+    suspend fun getUserByType(userType: String): UserEntity?
 
-    /**
-     * Finds a user by their phone number.
-     * Crucial for the login flow to verify if an account exists before checking the PIN.
-     */
-    @Query("SELECT * FROM users WHERE phoneNumber = :phone")
-    suspend fun getUserByPhone(phone: String): UserEntity?
+    // Still used by HomeDashboardScreen and SettingsScreen to load the
+    // currently active user's name/preferences after login.
+    @Query("""
+        SELECT * FROM users 
+        WHERE isActive = 1 
+        ORDER BY lastLoginAt DESC 
+        LIMIT 1
+    """)
+    suspend fun getCurrentUser(): UserEntity?
 
-    /**
-     * Updates the last login timestamp.
-     * Called immediately after a successful PIN verification.
-     */
-    @Query("UPDATE users SET lastLoginAt = :timestamp WHERE userId = :userId")
+    @Query("""
+        UPDATE users 
+        SET lastLoginAt = :timestamp 
+        WHERE userId = :userId
+    """)
     suspend fun updateLastLogin(userId: String, timestamp: String)
 
-    /**
-     * Retrieves the current user logged into the device.
-     * Used to determine if the app should open the Dashboard or the Login screen on startup.
-     */
-    @Query("SELECT * FROM users LIMIT 1")
-    suspend fun getCurrentUser(): UserEntity?
+    @Query("""
+        UPDATE users 
+        SET isActive = 0 
+        WHERE userId = :userId
+    """)
+    suspend fun deactivateUser(userId: String)
+
+    @Query("SELECT * FROM users WHERE userId = :userId LIMIT 1")
+    suspend fun getUser(userId: String): UserEntity?
+
+    // Sign out: marks all users inactive so next launch hits UserTypeScreen
+    @Query("UPDATE users SET isActive = 0")
+    suspend fun signOutAll()
 }

@@ -68,7 +68,7 @@ fun DashboardScreen(navController: NavController) {
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            
+
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -129,7 +129,7 @@ fun DashboardScreen(navController: NavController) {
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            
+
             item {
                 Surface(
                     onClick = { navController.navigate(Screen.QRCode.route) },
@@ -162,7 +162,7 @@ fun DashboardScreen(navController: NavController) {
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            
+
             items(3) { index ->
                 AIActivityCard(
                     title = if (index == 0) "Newborn Cry Analysis" else "Mother Vital Trend",

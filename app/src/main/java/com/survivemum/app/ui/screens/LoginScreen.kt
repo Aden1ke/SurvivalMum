@@ -3,7 +3,6 @@ package com.survivemum.app.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,20 +15,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.survivemum.app.data.SurviveMumDatabase
-import com.survivemum.app.ui.theme.*
+import com.survivemum.app.navigation.Screen
 import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(navController: NavController, userType: String) {
 
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val scope   = rememberCoroutineScope()
 
-    var pin by remember { mutableStateOf("") }
+    var pin          by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
+    var isLoading    by remember { mutableStateOf(false) }
 
-    val numbers = listOf(
+    // Issue 4: the keypad is the ONLY input — no soft keyboard, no text field.
+    // Letters are structurally impossible because the buttons only emit digits.
+    val keyRows = listOf(
         listOf("1", "2", "3"),
         listOf("4", "5", "6"),
         listOf("7", "8", "9"),
@@ -44,78 +45,69 @@ fun LoginScreen(navController: NavController, userType: String) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-
-        Text(
-            text = "SurviveMum",
+        Text("SurviveMum",
             style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "The Silent Guardian",
+            color = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(8.dp))
+        Text("The Silent Guardian",
             style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+        // Show which account type is being logged into
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = if (userType == "TBA") "Signing in as Birth Attendant"
+            else "Signing in as Mother / Caregiver",
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(48.dp))
-
-        Text(
-            text = "Enter your PIN",
+        Spacer(Modifier.height(48.dp))
+        Text("Enter your PIN",
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
+            color = MaterialTheme.colorScheme.onBackground)
+        Spacer(Modifier.height(24.dp))
 
         // PIN dots
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            repeat(4) { index ->
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            repeat(4) { i ->
                 Box(
                     modifier = Modifier
                         .size(20.dp)
                         .clip(CircleShape)
                         .background(
-                            if (index < pin.length)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.outline
+                            if (i < pin.length) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.outline
                         )
                 )
             }
         }
 
         if (errorMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = errorMessage,
+            Spacer(Modifier.height(12.dp))
+            Text(errorMessage,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center
-            )
+                textAlign = TextAlign.Center)
         }
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(Modifier.height(40.dp))
 
-        // Number pad
-        numbers.forEach { row ->
+        // Keypad
+        keyRows.forEach { row ->
             Row(
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
                 row.forEach { key ->
+                    val isConfirm = key == "✓"
                     Box(
                         modifier = Modifier
                             .size(72.dp)
                             .clip(CircleShape)
                             .background(
-                                when (key) {
-                                    "✓" -> MaterialTheme.colorScheme.primary
-                                    else -> MaterialTheme.colorScheme.surfaceVariant
-                                }
+                                if (isConfirm) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surfaceVariant
                             ),
                         contentAlignment = Alignment.Center
                     ) {
@@ -127,38 +119,48 @@ fun LoginScreen(navController: NavController, userType: String) {
                                         errorMessage = ""
                                     }
                                     "✓" -> {
-                                        if (pin.length == 4) {
-                                            isLoading = true
-                                            scope.launch {
-                                                try {
-                                                    val db = SurviveMumDatabase.getDatabase(context)
-                                                    val user = db.userDao().getCurrentUser()
-                                                    if (user != null && user.pinHash == pin) {
-                                                        db.userDao().updateLastLogin(
-                                                            user.userId,
-                                                            System.currentTimeMillis().toString()
-                                                        )
-                                                        isLoading = false
-                                                        navController.navigate("home/${user.userType}") {
-                                                            popUpTo("login/$userType") {
-                                                                inclusive = true
-                                                            }
-                                                        }
-                                                    } else {
-                                                        isLoading = false
-                                                        errorMessage = "Wrong PIN. Try again."
-                                                        pin = ""
-                                                    }
-                                                } catch (e: Exception) {
-                                                    isLoading = false
-                                                    errorMessage = "Error: ${e.message}"
-                                                }
-                                            }
-                                        } else {
+                                        if (pin.length < 4) {
                                             errorMessage = "Enter all 4 digits"
+                                            return@TextButton
+                                        }
+                                        isLoading = true
+                                        scope.launch {
+                                            try {
+                                                val db = SurviveMumDatabase.getDatabase(context)
+
+                                                // Issue 5 fix: look up user by userType AND pin
+                                                // so a TBA pin never unlocks a mother account
+                                                // and vice versa.
+                                                val user = db.userDao().getUserByType(userType)
+
+                                                if (user != null && user.pinHash == pin) {
+                                                    db.userDao().updateLastLogin(
+                                                        user.userId,
+                                                        System.currentTimeMillis().toString()
+                                                    )
+                                                    isLoading = false
+                                                    navController.navigate(
+                                                        Screen.HomeDashboard.go(user.userType)
+                                                    ) {
+                                                        // Clear entire auth stack
+                                                        popUpTo(Screen.UserType.route) {
+                                                            inclusive = true
+                                                        }
+                                                    }
+                                                } else {
+                                                    isLoading = false
+                                                    errorMessage = "Wrong PIN. Try again."
+                                                    pin = ""
+                                                }
+                                            } catch (e: Exception) {
+                                                isLoading = false
+                                                errorMessage = "Error: ${e.message}"
+                                            }
                                         }
                                     }
                                     else -> {
+                                        // Issue 4: only digits 0-9 are on the keypad.
+                                        // No text field = no soft keyboard = no letters possible.
                                         if (pin.length < 4) {
                                             pin += key
                                             errorMessage = ""
@@ -168,21 +170,19 @@ fun LoginScreen(navController: NavController, userType: String) {
                             },
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            if (isLoading && key == "✓") {
+                            if (isLoading && isConfirm) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary,  // CHANGED
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                     strokeWidth = 2.dp
                                 )
                             } else {
                                 Text(
-                                    text = key,
+                                    key,
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = when (key) {
-                                        "✓" -> MaterialTheme.colorScheme.onPrimary  // CHANGED
-                                        else -> MaterialTheme.colorScheme.onBackground
-                                    }
+                                    color = if (isConfirm) MaterialTheme.colorScheme.onPrimary
+                                    else MaterialTheme.colorScheme.onBackground
                                 )
                             }
                         }
@@ -191,20 +191,26 @@ fun LoginScreen(navController: NavController, userType: String) {
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
+        Spacer(Modifier.height(32.dp))
         TextButton(
-            onClick = { navController.navigate("signup/$userType") },
+            onClick = { navController.navigate(Screen.Signup.go(userType)) },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "New user? Create account",
+            Text("New user? Create account",
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
-                ),
-                textAlign = TextAlign.Center
-            )
+                    textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline),
+                textAlign = TextAlign.Center)
         }
     }
 }
+
+// ── Required UserDao addition ─────────────────────────────────────────────────
+// Add this query to UserDao.kt so login is scoped to userType:
+//
+// @Query("SELECT * FROM users WHERE userType = :userType AND isActive = 1 ORDER BY lastLoginAt DESC LIMIT 1")
+// suspend fun getUserByType(userType: String): UserEntity?
+//
+// Without this, getCurrentUser() returns whichever user logged in last regardless
+// of type, which is what caused the TBA PIN to enter the mother's account.
+// ─────────────────────────────────────────────────────────────────────────────

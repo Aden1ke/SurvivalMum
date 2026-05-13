@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import com.survivemum.app.data.PatientEntity
 import com.survivemum.app.data.SurviveMumDatabase
 import com.survivemum.app.data.VisitEntity
+import com.survivemum.app.navigation.Screen
 import com.survivemum.app.ui.theme.*
 import kotlinx.coroutines.flow.first
 
@@ -28,17 +29,17 @@ fun PatientProfileScreen(navController: NavController, patientId: String) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
-    var patient by remember { mutableStateOf<PatientEntity?>(null) }
+    var patient     by remember { mutableStateOf<PatientEntity?>(null) }
     var latestVisit by remember { mutableStateOf<VisitEntity?>(null) }
-    var visitCount by remember { mutableStateOf(0) }
-    var isLoading by remember { mutableStateOf(true) }
+    var visitCount  by remember { mutableStateOf(0) }
+    var isLoading   by remember { mutableStateOf(true) }
 
     LaunchedEffect(patientId) {
         val db = SurviveMumDatabase.getDatabase(context)
-        patient = db.patientDao().getPatient(patientId)
+        patient     = db.patientDao().getPatient(patientId)
         latestVisit = db.visitDao().getLatestVisit(patientId)
-        visitCount = db.visitDao().getVisitCount(patientId)
-        isLoading = false
+        visitCount  = db.visitDao().getVisitCount(patientId)
+        isLoading   = false
     }
 
     Column(
@@ -47,14 +48,14 @@ fun PatientProfileScreen(navController: NavController, patientId: String) {
             .background(MaterialTheme.colorScheme.background)
     ) {
 
-        // Back button + header
         val riskColor = when (patient?.riskLevel) {
             "CRITICAL" -> AlertCritical
-            "HIGH" -> AlertHigh
-            "MEDIUM" -> AlertMedium
-            else -> AlertLow
+            "HIGH"     -> AlertHigh
+            "MEDIUM"   -> AlertMedium
+            else       -> AlertLow
         }
 
+        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -66,27 +67,23 @@ fun PatientProfileScreen(navController: NavController, patientId: String) {
                     onClick = { navController.popBackStack() },
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text(
-                        text = "← Back",
-                        color = Color.White.copy(alpha = 0.7f),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Text("← Back", color = Color.White.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.bodyMedium)
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
                 Text(
                     text = patient?.fullName ?: "Loading...",
                     style = MaterialTheme.typography.headlineMedium,
                     color = Color.White
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(Modifier.height(4.dp))
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = if ((patient?.weeksPregnant ?: 0) > 0)
-                            "${patient?.weeksPregnant} weeks pregnant"
-                        else "Postpartum",
+                            "${patient?.weeksPregnant} weeks pregnant" else "Postpartum",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.8f)
                     )
@@ -96,21 +93,16 @@ fun PatientProfileScreen(navController: NavController, patientId: String) {
                             .background(riskColor)
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
-                        Text(
-                            text = patient?.riskLevel ?: "LOW",
+                        Text(patient?.riskLevel ?: "LOW",
                             style = MaterialTheme.typography.labelMedium,
-                            color = Color.White
-                        )
+                            color = Color.White)
                     }
                 }
             }
         }
 
         if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = SurviveMumRed)
             }
         } else {
@@ -135,98 +127,87 @@ fun PatientProfileScreen(navController: NavController, patientId: String) {
                     )
                     StatCard(
                         modifier = Modifier.weight(1f),
-                        number = latestVisit?.let {
-                            "${it.bpSystolic}/${it.bpDiastolic}"
-                        } ?: "--",
+                        number = latestVisit?.let { "${it.bpSystolic}/${it.bpDiastolic}" } ?: "--",
                         label = "Last BP",
-                        color = if ((latestVisit?.bpSystolic ?: 0) >= 140)
-                            SurviveMumRed else NewbornPrimary
+                        color = if ((latestVisit?.bpSystolic ?: 0) >= 140) SurviveMumRed else NewbornPrimary
                     )
                 }
 
-                // Patient Details Card
+                // Patient details
                 ProfileCard(title = "Patient Details") {
                     ProfileRow("Community", patient?.community ?: "Not set")
                     ProfileRow("Language", when (patient?.language) {
-                        "yo" -> "Yoruba"
-                        "ha" -> "Hausa"
-                        "ig" -> "Igbo"
-                        "pcm" -> "Nigerian Pidgin"
-                        else -> "English"
+                        "yo"  -> "Yoruba"; "ha" -> "Hausa"
+                        "ig"  -> "Igbo";  "pcm" -> "Nigerian Pidgin"
+                        else  -> "English"
                     })
                     ProfileRow("Blood Type", patient?.bloodType ?: "Unknown")
-                    ProfileRow("HIV Status", patient?.hivStatus ?: "Unknown")
-                    ProfileRow("Gravida", "${patient?.gravida ?: 0}")
-                    ProfileRow("Para", "${patient?.para ?: 0}")
+                    ProfileRow("HIV Status", patient?.hivStatus  ?: "Unknown")
+                    ProfileRow("Gravida",    "${patient?.gravida ?: 0}")
+                    ProfileRow("Para",       "${patient?.para    ?: 0}")
                 }
 
-                // Latest Visit Card
+                // Latest visit
                 if (latestVisit != null) {
                     ProfileCard(title = "Latest ANC Visit") {
-                        ProfileRow("Date", latestVisit!!.visitDate)
-                        ProfileRow("Week", "${latestVisit!!.weeksAtVisit}")
-                        ProfileRow(
-                            "Blood Pressure",
-                            "${latestVisit!!.bpSystolic}/${latestVisit!!.bpDiastolic} mmHg"
-                        )
-                        latestVisit!!.weightKg?.let {
-                            ProfileRow("Weight", "${it} kg")
-                        }
-                        if (latestVisit!!.notes.isNotBlank()) {
+                        ProfileRow("Date",  latestVisit!!.visitDate)
+                        ProfileRow("Week",  "${latestVisit!!.weeksAtVisit}")
+                        ProfileRow("Blood Pressure",
+                            "${latestVisit!!.bpSystolic}/${latestVisit!!.bpDiastolic} mmHg")
+                        latestVisit!!.weightKg?.let { ProfileRow("Weight", "$it kg") }
+                        if (latestVisit!!.notes.isNotBlank())
                             ProfileRow("Notes", latestVisit!!.notes)
-                        }
                     }
                 }
 
-                // Action Buttons
-                Text(
-                    text = "Actions",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                Text("Actions", style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground)
 
+                // FIXED: all three buttons now use Screen helpers which match
+                //        the routes registered in NavGraph.
                 ActionButton(
                     text = "View Full History",
                     color = MotherPrimary,
-                    onClick = { navController.navigate("history/$patientId") }
+                    onClick = { navController.navigate(Screen.PatientHistory.go(patientId)) }
                 )
-
                 ActionButton(
                     text = "View Alerts",
                     color = SurviveMumRed,
-                    onClick = { navController.navigate("alerts/$patientId") }
+                    onClick = { navController.navigate(Screen.AlertHistory.go(patientId)) }
                 )
-
                 ActionButton(
                     text = "Newborn Record",
                     color = NewbornPrimary,
-                    onClick = { navController.navigate("newborn/$patientId") }
+                    onClick = { navController.navigate(Screen.NewbornRecord.go(patientId)) }
+                )
+                ActionButton(
+                    text = "Share QR Record",
+                    color = MotherPrimary,
+                    onClick = { navController.navigate(Screen.QRCode.route) }
                 )
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(Modifier.height(40.dp))
             }
         }
     }
 }
+
+// ── Shared composables used across multiple screens ───────────────────────────
+// (ProfileCard, ProfileRow, ActionButton live here so NewbornRecordScreen
+//  and SettingsScreen can import them from this file)
 
 @Composable
 fun ProfileCard(title: String, content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+            Text(title, style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(12.dp))
             content()
         }
     }
@@ -235,45 +216,26 @@ fun ProfileCard(title: String, content: @Composable ColumnScope.() -> Unit) {
 @Composable
 fun ProfileRow(label: String, value: String) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
+        Text(label, style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+        Text(value, style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f)
-        )
+            fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
     }
-    HorizontalDivider(
-        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-        thickness = 0.5.dp
-    )
+    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 0.5.dp)
 }
 
 @Composable
 fun ActionButton(text: String, color: Color, onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp),
+        modifier = Modifier.fillMaxWidth().height(52.dp),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(containerColor = color)
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge,
-            color = Color.White
-        )
+        Text(text, style = MaterialTheme.typography.labelLarge, color = Color.White)
     }
 }

@@ -1,59 +1,62 @@
 package com.survivemum.app.navigation
 
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-
-// ── Confirmed working ────────────────────────────────────────────────────────
-import com.survivemum.app.ui.screens.AlertScreen
-import com.survivemum.app.ui.screens.CameraMonitorScreen
-import com.survivemum.app.ui.screens.DashboardScreen
-import com.survivemum.app.ui.screens.HomeDashboardScreen
-import com.survivemum.app.ui.screens.LoginScreen
-import com.survivemum.app.ui.screens.MotherMonitorScreen
-import com.survivemum.app.ui.screens.NewbornMonitorScreen
-import com.survivemum.app.ui.screens.QRCodeScreen
-import com.survivemum.app.ui.screens.SignupScreen
-import com.survivemum.app.ui.screens.UserTypeScreen
-
-// ── TODO: uncomment once you confirm these compile ───────────────────────────
-// import com.survivemum.app.ui.screens.PatientProfileScreen
-// import com.survivemum.app.ui.screens.PatientHistoryScreen
-// import com.survivemum.app.ui.screens.NewbornRecordScreen
-// import com.survivemum.app.ui.screens.SettingsScreen
-// import com.survivemum.app.ui.screens.AlertHistoryScreen
+import com.survivemum.app.ui.screens.*
 
 sealed class Screen(val route: String) {
-    // Auth — userType passed as path argument
-    object UserType      : Screen("user_type")
-    object Login         : Screen("login/{userType}") {
+
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    object UserType : Screen("user_type")
+
+    object Login : Screen("login/{userType}") {
         fun go(userType: String) = "login/$userType"
     }
-    object Signup        : Screen("signup/{userType}") {
+
+    // Signup handles "TBA", "mother", AND "PATIENT" (TBA registering a patient)
+    object Signup : Screen("signup/{userType}") {
         fun go(userType: String) = "signup/$userType"
     }
 
-    // Home — userType passed as path argument
-    object HomeDashboard : Screen("dashboard/{userType}") {
-        fun go(userType: String) = "dashboard/$userType"
+    // ── Home ──────────────────────────────────────────────────────────────────
+    object HomeDashboard : Screen("home/{userType}") {
+        fun go(userType: String) = "home/$userType"
     }
 
-    // Feature screens (no args)
-    object Dashboard      : Screen("old_dashboard")
+    object Dashboard : Screen("old_dashboard")
+
+    // ── Monitoring ────────────────────────────────────────────────────────────
     object MotherMonitor  : Screen("mother_monitor")
     object NewbornMonitor : Screen("newborn_monitor")
     object ToddlerMonitor : Screen("toddler_monitor")
     object CameraMonitor  : Screen("camera_monitor")
-    object PatientProfile : Screen("patient_profile")
-    object PatientHistory : Screen("patient_history")
-    object NewbornRecord  : Screen("newborn_record")
-    object Alert          : Screen("alert")
-    object AlertHistory   : Screen("alert_history")
-    object QRCode         : Screen("qr_code")
-    object Settings       : Screen("settings")
-    object Timeline       : Screen("timeline")
+
+    // ── Patient — patientId as path arg ───────────────────────────────────────
+    object PatientProfile : Screen("patient/{patientId}") {
+        fun go(patientId: String) = "patient/$patientId"
+    }
+    object PatientHistory : Screen("history/{patientId}") {
+        fun go(patientId: String) = "history/$patientId"
+    }
+    object AlertHistory : Screen("alerts/{patientId}") {
+        fun go(patientId: String) = "alerts/$patientId"
+    }
+    object NewbornRecord : Screen("newborn/{patientId}") {
+        fun go(patientId: String) = "newborn/$patientId"
+    }
+
+    // ── Utilities ─────────────────────────────────────────────────────────────
+    object Alert    : Screen("alert")
+    object QRCode   : Screen("qr_code")
+    object Settings : Screen("settings")
+    object Timeline : Screen("timeline")
 }
 
 @Composable
@@ -62,29 +65,32 @@ fun NavGraph(navController: NavHostController) {
         navController = navController,
         startDestination = Screen.UserType.route
     ) {
-        // ── Auth ─────────────────────────────────────────────────────────────
+
+        // ── Auth ──────────────────────────────────────────────────────────────
         composable(Screen.UserType.route) {
             UserTypeScreen(navController = navController)
         }
-        composable(Screen.Login.route) { backStackEntry ->
-            val userType = backStackEntry.arguments?.getString("userType") ?: "mother"
+        composable(Screen.Login.route) { back ->
+            val userType = back.arguments?.getString("userType") ?: "mother"
             LoginScreen(navController = navController, userType = userType)
         }
-        composable(Screen.Signup.route) { backStackEntry ->
-            val userType = backStackEntry.arguments?.getString("userType") ?: "mother"
+        // Fix 5: "PATIENT" is a valid userType here — SignupScreen handles it
+        // differently (creates PatientEntity not UserEntity, different back stack)
+        composable(Screen.Signup.route) { back ->
+            val userType = back.arguments?.getString("userType") ?: "mother"
             SignupScreen(navController = navController, userType = userType)
         }
 
-        // ── Home ─────────────────────────────────────────────────────────────
-        composable(Screen.HomeDashboard.route) { backStackEntry ->
-            val userType = backStackEntry.arguments?.getString("userType") ?: "mother"
+        // ── Home ──────────────────────────────────────────────────────────────
+        composable(Screen.HomeDashboard.route) { back ->
+            val userType = back.arguments?.getString("userType") ?: "mother"
             HomeDashboardScreen(navController = navController, userType = userType)
         }
         composable(Screen.Dashboard.route) {
             DashboardScreen(navController = navController)
         }
 
-        // ── Monitoring ───────────────────────────────────────────────────────
+        // ── Monitoring ────────────────────────────────────────────────────────
         composable(Screen.MotherMonitor.route) {
             MotherMonitorScreen(navController = navController)
         }
@@ -95,40 +101,53 @@ fun NavGraph(navController: NavHostController) {
             CameraMonitorScreen(navController = navController)
         }
         composable(Screen.ToddlerMonitor.route) {
-            Text("Toddler Monitor — coming soon")
+            ComingSoonScreen(name = "Toddler Monitor")
         }
         composable(Screen.Timeline.route) {
-            Text("Timeline — coming soon")
+            ComingSoonScreen(name = "Timeline")
         }
 
-        // ── Patient ──────────────────────────────────────────────────────────
-        composable(Screen.PatientProfile.route) {
-            // PatientProfileScreen(navController) — uncomment once confirmed
-            Text("Patient Profile — coming soon")
+        // ── Patient ───────────────────────────────────────────────────────────
+        composable(Screen.PatientProfile.route) { back ->
+            val patientId = back.arguments?.getString("patientId") ?: return@composable
+            PatientProfileScreen(navController = navController, patientId = patientId)
         }
-        composable(Screen.PatientHistory.route) {
-            // PatientHistoryScreen(navController) — uncomment once confirmed
-            Text("Patient History — coming soon")
+        // Fix 6: PatientHistoryScreen is now wired up
+        composable(Screen.PatientHistory.route) { back ->
+            val patientId = back.arguments?.getString("patientId") ?: return@composable
+            PatientHistoryScreen(navController = navController, patientId = patientId)
         }
-        composable(Screen.NewbornRecord.route) {
-            // NewbornRecordScreen(navController) — uncomment once confirmed
-            Text("Newborn Record — coming soon")
+        composable(Screen.NewbornRecord.route) { back ->
+            val patientId = back.arguments?.getString("patientId") ?: return@composable
+            NewbornRecordScreen(navController = navController, patientId = patientId)
+        }
+        composable(Screen.AlertHistory.route) { back ->
+            val patientId = back.arguments?.getString("patientId") ?: return@composable
+            AlertHistoryScreen(navController = navController, patientId = patientId)
         }
 
-        // ── Utilities ────────────────────────────────────────────────────────
+        // ── Utilities ─────────────────────────────────────────────────────────
         composable(Screen.Alert.route) {
             AlertScreen(navController = navController)
-        }
-        composable(Screen.AlertHistory.route) {
-            // AlertHistoryScreen(navController) — uncomment once confirmed
-            Text("Alert History — coming soon")
         }
         composable(Screen.QRCode.route) {
             QRCodeScreen(navController = navController)
         }
         composable(Screen.Settings.route) {
-            // SettingsScreen(navController) — uncomment once confirmed
-            Text("Settings — coming soon")
+            SettingsScreen(navController = navController)
+        }
+    }
+}
+
+// Placeholder shown for screens not yet built
+@Composable
+private fun ComingSoonScreen(name: String) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(name, style = MaterialTheme.typography.titleLarge)
+            Text("Coming soon", style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

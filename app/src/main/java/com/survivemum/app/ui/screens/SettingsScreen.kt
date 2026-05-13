@@ -60,10 +60,12 @@ fun SettingsScreen(navController: NavController) {
             .background(MaterialTheme.colorScheme.background)
     ) {
 
+        // Top Bar with statusBarsPadding
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(SurviveMumDark)
+                .statusBarsPadding()
                 .padding(20.dp)
         ) {
             Column {
@@ -244,7 +246,7 @@ fun SettingsScreen(navController: NavController) {
             // Sign out
             OutlinedButton(
                 onClick = {
-                    navController.navigate("usertype") {
+                    navController.navigate("user_type") {
                         popUpTo(0) { inclusive = true }
                     }
                 },

@@ -328,9 +328,7 @@ fun SignupScreen(navController: NavController, userType: String) {
 
                             isLoading = false
 
-                            // Issue 5 fix: pop back to TBA dashboard only —
-                            // do NOT clear UserTypeScreen from the stack.
-                            // The TBA's home is still on the stack; we just go back to it.
+
                             navController.navigate(Screen.HomeDashboard.go("TBA")) {
                                 // Pop everything up to (but not including) the TBA dashboard
                                 // so the back stack is: TBADashboard (only)

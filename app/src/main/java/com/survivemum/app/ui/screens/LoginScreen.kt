@@ -28,8 +28,7 @@ fun LoginScreen(navController: NavController, userType: String) {
     var errorMessage by remember { mutableStateOf("") }
     var isLoading    by remember { mutableStateOf(false) }
 
-    // Issue 4: the keypad is the ONLY input — no soft keyboard, no text field.
-    // Letters are structurally impossible because the buttons only emit digits.
+
     val keyRows = listOf(
         listOf("1", "2", "3"),
         listOf("4", "5", "6"),
@@ -205,12 +204,3 @@ fun LoginScreen(navController: NavController, userType: String) {
     }
 }
 
-// ── Required UserDao addition ─────────────────────────────────────────────────
-// Add this query to UserDao.kt so login is scoped to userType:
-//
-// @Query("SELECT * FROM users WHERE userType = :userType AND isActive = 1 ORDER BY lastLoginAt DESC LIMIT 1")
-// suspend fun getUserByType(userType: String): UserEntity?
-//
-// Without this, getCurrentUser() returns whichever user logged in last regardless
-// of type, which is what caused the TBA PIN to enter the mother's account.
-// ─────────────────────────────────────────────────────────────────────────────

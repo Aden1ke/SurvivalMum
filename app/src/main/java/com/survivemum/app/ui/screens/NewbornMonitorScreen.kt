@@ -1,6 +1,5 @@
 package com.survivemum.app.ui.screens
 
-// ── Stage 3: Added navigation buttons to NewbornRecordScreen and AlertScreen ──
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas

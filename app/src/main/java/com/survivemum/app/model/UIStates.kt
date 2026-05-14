@@ -24,7 +24,7 @@ data class NewbornUIState(
     val waveformData: List<Float> = emptyList()
 )
 
-@Immutable
+/*@Immutable
 data class MotherMonitorUIState(
     val hr: Int = 0,
     val rr: Int = 0,
@@ -34,4 +34,4 @@ data class MotherMonitorUIState(
     val isScanning: Boolean = true,
     val reasoningSteps: List<ReasoningStep> = emptyList(),
     val trendData: List<Float> = emptyList()
-)
+)*/

@@ -245,4 +245,4 @@ fun AIActivityCard(title: String, time: String, result: String) {
             Text(time, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
         }
     }
-}
+}  

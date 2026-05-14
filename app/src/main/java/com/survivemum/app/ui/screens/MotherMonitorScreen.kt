@@ -1,8 +1,5 @@
 package com.survivemum.app.ui.screens
 
-// ── Stage 3: MotherMonitorScreen now has buttons to reach ─────────────────────
-//    PatientProfileScreen, QRCodeScreen, and AlertScreen
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState

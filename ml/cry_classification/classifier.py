@@ -1,394 +1,283 @@
 # SurviveMum — Cry Classification Pipeline
+# Run this entire file to produce cry_patterns.json for Android
 
-
+# ─────────────────────────────────────────────────────────────────────────────
 # CELL 1 — Install dependencies
-!pip install -q librosa soundfile numpy scipy
+# ─────────────────────────────────────────────────────────────────────────────
 
-import librosa
-import numpy as np
+# !pip install -q librosa numpy scipy
+
 import json
-import uuid
-from datetime import datetime, timezone
+import numpy as np
 
-print("✅ Cry classification dependencies ready")
+try:
+    import librosa
+    LIBROSA_AVAILABLE = True
+    print("✅ librosa available — full audio analysis enabled")
+except ImportError:
+    LIBROSA_AVAILABLE = False
+    print("⚠️  librosa not available — using pattern rules only")
 
-# 
-# CELL 2 — Clinical constants from research
-# Uppsala University + MIT cry analysis
-# 
+print("✅ Dependencies ready")
 
-CRY_CLASSES = [
-    "HUNGER",
-    "PAIN",
-    "NEUROLOGICAL_DISTRESS",
-    "RESPIRATORY_DISTRESS",
-    "DISCOMFORT",
-    "NORMAL_FUSSING",
-    "SILENT_WHEN_EXPECTED",
-    "UNKNOWN"
-]
+# ─────────────────────────────────────────────────────────────────────────────
+# CELL 2 — Clinical cry patterns
+# Based on published neonatal cry research and WHO guidelines
+# ─────────────────────────────────────────────────────────────────────────────
 
-CRY_CLINICAL_FLAGS = {
-    "NEUROLOGICAL_DISTRESS": "POSSIBLE_MENINGITIS",
-    "RESPIRATORY_DISTRESS":  "RESPIRATORY_DISTRESS",
-    "PAIN":                  "PAIN_INVESTIGATION_NEEDED",
-    "SILENT_WHEN_EXPECTED":  "NEUROLOGICAL_CONCERN",
-    "HUNGER":                None,
-    "NORMAL_FUSSING":        None,
-    "DISCOMFORT":            None,
-    "UNKNOWN":               None
+CRY_PATTERNS = {
+    "DISTRESS": {
+        "description": "High-pitched short bursts — possible meningitis or neurological irritability",
+        "clinical_source": "WHO Pocket Book: High-pitched cry = neurological distress flag",
+        "severity": "CRITICAL",
+        "pitch_hz_min": 400,
+        "pitch_hz_max": 800,
+        "burst_duration_max_seconds": 0.5,
+        "action": "EMERGENCY. Possible meningitis. Refer to facility immediately. Check fontanelle.",
+        "alert_type": "NEUROLOGICAL_DISTRESS"
+    },
+    "RESPIRATORY_DISTRESS": {
+        "description": "Weak breathy cry — respiratory distress at birth",
+        "clinical_source": "WHO Essential Newborn Care 2024: Weak cry at birth = immediate assessment",
+        "severity": "CRITICAL",
+        "pitch_hz_min": 100,
+        "pitch_hz_max": 250,
+        "burst_duration_min_seconds": 2.0,
+        "amplitude_threshold": "LOW",
+        "action": "EMERGENCY. Begin newborn resuscitation. Refer immediately.",
+        "alert_type": "RESPIRATORY_DISTRESS"
+    },
+    "PAIN": {
+        "description": "Intense sustained cry — pain response",
+        "clinical_source": "Neonatal cry research: Sustained high cry = pain or discomfort",
+        "severity": "HIGH",
+        "pitch_hz_min": 300,
+        "pitch_hz_max": 500,
+        "burst_duration_min_seconds": 1.0,
+        "burst_duration_max_seconds": 3.0,
+        "action": "Assess for injury, infection, or feeding difficulty. Monitor closely.",
+        "alert_type": "PAIN_CRY"
+    },
+    "HUNGER": {
+        "description": "Rhythmic repetitive cry — hunger or discomfort",
+        "clinical_source": "Neonatal cry research: Rhythmic pattern = hunger or basic need",
+        "severity": "LOW",
+        "pitch_hz_min": 250,
+        "pitch_hz_max": 380,
+        "rhythmic": True,
+        "action": "Feed the baby. Check nappy. Monitor for escalation.",
+        "alert_type": "HUNGER_CRY"
+    },
+    "NORMAL": {
+        "description": "Normal healthy vigorous cry",
+        "clinical_source": "WHO Essential Newborn Care: Vigorous cry within 30 seconds = healthy",
+        "severity": "LOW",
+        "pitch_hz_min": 250,
+        "pitch_hz_max": 400,
+        "action": "No action required. Continue routine monitoring.",
+        "alert_type": "NORMAL"
+    }
 }
 
-THRESHOLDS = {
-    "min_audio_seconds":     3.0,
-    "flag_confidence_min":   0.65,
-    "neurological_pitch_hz": 500,
-    "burst_duration_max":    1.5,
-    "weak_cry_intensity":    0.3,
-}
+print(f"✅ {len(CRY_PATTERNS)} cry patterns defined")
+for label, pattern in CRY_PATTERNS.items():
+    print(f"  {label}: severity={pattern['severity']}, pitch={pattern.get('pitch_hz_min', '?')}-{pattern.get('pitch_hz_max', '?')}Hz")
 
-print("✅ Clinical constants loaded")
-print(f"   {len(CRY_CLASSES)} cry classes defined")
-print(f"   {len([v for v in CRY_CLINICAL_FLAGS.values() if v])} clinical flags")
+# ─────────────────────────────────────────────────────────────────────────────
+# CELL 3 — Classification function
+# This is the logic CryClassifier.kt replicates on Android
+# ─────────────────────────────────────────────────────────────────────────────
 
-# 
-# CELL 3 — Audio feature extractor
-# 
-
-def extract_cry_features(audio_path: str) -> dict:
-    """
-    Extract acoustic features from a cry audio file.
-    These features are what Gemma 4 audio multimodal
-    uses to classify the cry type.
-    
-    Args:
-        audio_path: Path to WAV file (minimum 3 seconds)
-    
-    Returns:
-        Dictionary of extracted acoustic features
-    """
-    try:
-        # Load audio
-        y, sr = librosa.load(audio_path, sr=22050)
-        duration = len(y) / sr
-        
-        if duration < THRESHOLDS["min_audio_seconds"]:
-            return {
-                "error": f"Audio too short: {duration:.1f}s. Minimum 3s required.",
-                "duration_seconds": duration
-            }
-        
-        #  PITCH ANALYSIS 
-        f0, voiced_flag, voiced_probs = librosa.pyin(
-            y,
-            fmin=librosa.note_to_hz('C2'),
-            fmax=librosa.note_to_hz('C7')
-        )
-        
-        valid_f0 = f0[voiced_flag]
-        mean_pitch = float(np.nanmean(valid_f0)) if len(valid_f0) > 0 else 0
-        max_pitch = float(np.nanmax(valid_f0)) if len(valid_f0) > 0 else 0
-        
-        #  INTENSITY / ENERGY 
-        rms = librosa.feature.rms(y=y)[0]
-        mean_intensity = float(np.mean(rms))
-        max_intensity = float(np.max(rms))
-        
-        #  DURATION PATTERN 
-        # Detect onset events (cry bursts)
-        onsets = librosa.onset.onset_detect(
-            y=y, sr=sr, units='time'
-        )
-        burst_count = len(onsets)
-        
-        # Calculate average burst duration
-        if len(onsets) > 1:
-            burst_durations = np.diff(onsets)
-            avg_burst_duration = float(np.mean(burst_durations))
-        else:
-            avg_burst_duration = duration
-        
-        #  SPECTRAL FEATURES 
-        spectral_centroid = librosa.feature.spectral_centroid(y=y, sr=sr)[0]
-        mean_spectral_centroid = float(np.mean(spectral_centroid))
-        
-        # Breathiness — measure of noise in signal
-        spectral_flatness = librosa.feature.spectral_flatness(y=y)[0]
-        breathiness = float(np.mean(spectral_flatness))
-        
-        return {
-            "duration_seconds": round(duration, 2),
-            "pitch": {
-                "mean_hz": round(mean_pitch, 1),
-                "max_hz": round(max_pitch, 1),
-                "category": (
-                    "VERY_HIGH" if mean_pitch > 600 else
-                    "HIGH"      if mean_pitch > THRESHOLDS["neurological_pitch_hz"] else
-                    "NORMAL"    if mean_pitch > 200 else
-                    "LOW"
-                )
-            },
-            "intensity": {
-                "mean": round(mean_intensity, 4),
-                "max": round(max_intensity, 4),
-                "category": (
-                    "WEAK"   if mean_intensity < THRESHOLDS["weak_cry_intensity"] else
-                    "NORMAL" if mean_intensity < 0.7 else
-                    "STRONG"
-                )
-            },
-            "duration_pattern": {
-                "burst_count": burst_count,
-                "avg_burst_duration_sec": round(avg_burst_duration, 2),
-                "category": (
-                    "SHORT_BURSTS"  if avg_burst_duration < THRESHOLDS["burst_duration_max"] and burst_count > 3 else
-                    "SUSTAINED"     if avg_burst_duration > 3.0 else
-                    "INTERMITTENT"  if burst_count > 1 else
-                    "CONTINUOUS"
-                )
-            },
-            "breathiness": {
-                "score": round(breathiness, 4),
-                "category": (
-                    "SIGNIFICANT" if breathiness > 0.5 else
-                    "MILD"        if breathiness > 0.3 else
-                    "NONE"
-                )
-            },
-            "spectral_centroid_hz": round(mean_spectral_centroid, 1)
-        }
-        
-    except Exception as e:
-        return {"error": str(e), "duration_seconds": 0}
-
-
-print("✅ Feature extractor ready")
-print("   Extracts: pitch, intensity, duration pattern, breathiness")
-
-# 
-# CELL 4 — Rule-based classifier
-# Used when Gemma API unavailable (offline fallback)
-# 
-
-def classify_cry_rules(features: dict) -> tuple:
-    """
-    Rule-based cry classification based on clinical research.
-    This is the offline fallback when Gemma 4 is not available.
-    
-    Returns:
-        (cry_type, confidence, thinking_trace)
-    """
-    if "error" in features:
-        return "UNKNOWN", 0.3, f"Feature extraction failed: {features['error']}"
-    
-    pitch_cat = features["pitch"]["category"]
-    intensity_cat = features["intensity"]["category"]
-    duration_cat = features["duration_pattern"]["category"]
-    breathiness_cat = features["breathiness"]["category"]
-    burst_count = features["duration_pattern"]["burst_count"]
-    
-    trace = []
-    trace.append("Rule-based cry analysis (offline mode):")
-    trace.append(f"Pitch: {pitch_cat} ({features['pitch']['mean_hz']:.0f} Hz)")
-    trace.append(f"Intensity: {intensity_cat}")
-    trace.append(f"Pattern: {duration_cat} ({burst_count} bursts)")
-    trace.append(f"Breathiness: {breathiness_cat}")
-    trace.append("")
-    
-    #  NEUROLOGICAL DISTRESS 
-    # High pitch + short bursts = meningitis indicator
-    # Source: Uppsala University neonatal cry research
-    if (pitch_cat in ["HIGH", "VERY_HIGH"] and
-        duration_cat == "SHORT_BURSTS" and
-        burst_count >= 3):
-        
-        confidence = 0.82 if pitch_cat == "VERY_HIGH" else 0.72
-        trace.append("PATTERN MATCH: High-pitched short bursts")
-        trace.append("Clinical reference: Uppsala University — pathological cry acoustics")
-        trace.append("Flag: POSSIBLE_MENINGITIS")
-        trace.append(f"Confidence: {confidence}")
-        return "NEUROLOGICAL_DISTRESS", confidence, "\n".join(trace)
-    
-    #  RESPIRATORY DISTRESS 
-    # Weak + breathy = respiratory compromise
-    if (intensity_cat == "WEAK" and
-        breathiness_cat in ["MILD", "SIGNIFICANT"]):
-        
-        confidence = 0.78 if breathiness_cat == "SIGNIFICANT" else 0.68
-        trace.append("PATTERN MATCH: Weak breathy cry")
-        trace.append("Clinical reference: WHO Essential Newborn Care — respiratory signs")
-        trace.append("Flag: RESPIRATORY_DISTRESS")
-        trace.append(f"Confidence: {confidence}")
-        return "RESPIRATORY_DISTRESS", confidence, "\n".join(trace)
-    
-    #  PAIN CRY 
-    # High pitch + sustained = pain indicator
-    if (pitch_cat in ["HIGH", "VERY_HIGH"] and
-        duration_cat in ["SUSTAINED", "CONTINUOUS"]):
-        
-        confidence = 0.71
-        trace.append("PATTERN MATCH: High-pitched sustained cry")
-        trace.append("Flag: PAIN_INVESTIGATION_NEEDED")
-        return "PAIN", confidence, "\n".join(trace)
-    
-    #  HUNGER CRY 
-    # Normal pitch + rhythmic = hunger
-    if (pitch_cat == "NORMAL" and
-        duration_cat in ["SHORT_BURSTS", "INTERMITTENT"] and
-        intensity_cat in ["NORMAL", "STRONG"]):
-        
-        confidence = 0.75
-        trace.append("PATTERN MATCH: Rhythmic normal-pitch cry")
-        trace.append("Classification: HUNGER (no clinical flag)")
-        return "HUNGER", confidence, "\n".join(trace)
-    
-    #  NORMAL FUSSING 
-    if intensity_cat in ["WEAK", "NORMAL"] and pitch_cat == "NORMAL":
-        confidence = 0.65
-        trace.append("PATTERN MATCH: Low intensity normal pitch")
-        trace.append("Classification: NORMAL_FUSSING (no clinical flag)")
-        return "NORMAL_FUSSING", confidence, "\n".join(trace)
-    
-    #  UNKNOWN 
-    trace.append("No pattern match found")
-    trace.append("Recommend: Record longer audio sample for better classification")
-    return "UNKNOWN", 0.40, "\n".join(trace)
-
-
-print("✅ Rule-based classifier ready")
-
-# 
-# CELL 5 — Output contract builder
-# Produces cry_classification_schema.json
-# 
-
-def make_cry_result(
-    patient_id: str,
-    cry_type: str,
-    confidence: float,
-    audio_seconds: float,
-    features: dict = None,
-    thinking_trace: str = "",
-    layer: str = "NEWBORN"
+def classify_cry(
+    pitch_hz: float,
+    burst_duration_seconds: float,
+    amplitude: float = 0.5,
+    is_rhythmic: bool = False
 ) -> dict:
     """
-    Builds the cry_classification_schema.json contract output.
-    This is exactly what FE displays and BE-2 consumes.
-    Never change field names without team agreement.
+    Classify a baby cry based on extracted audio features.
+
+    Args:
+        pitch_hz: Fundamental frequency of the cry in Hz
+        burst_duration_seconds: Duration of a single cry burst
+        amplitude: Normalised amplitude 0.0 to 1.0
+        is_rhythmic: Whether the cry follows a repetitive pattern
+
+    Returns:
+        Classification result with label, severity, and action
     """
-    clinical_flag = CRY_CLINICAL_FLAGS.get(cry_type) is not None
-    clinical_concern = CRY_CLINICAL_FLAGS.get(cry_type)
-    
-    action_map = {
-        "POSSIBLE_MENINGITIS": (
-            "High-pitched short cries detected. Possible neurological distress. "
-            "Assess fontanelle for bulging. Check temperature. "
-            "Consider immediate referral."
-        ),
-        "RESPIRATORY_DISTRESS": (
-            "Weak or breathy cry detected. Possible respiratory distress. "
-            "Check breathing rate. Look for chest indrawing. "
-            "Refer immediately if breathing rate above 60/min."
-        ),
-        "PAIN_INVESTIGATION_NEEDED": (
-            "Sustained pain cry detected. "
-            "Investigate source of pain. Check for injuries or infection."
-        ),
-        "NEUROLOGICAL_CONCERN": (
-            "Expected cry absent after stimulus. "
-            "Neurological assessment needed immediately."
-        )
-    }
-    
+
+    # DISTRESS — high pitched, short bursts (meningitis/neurological)
+    if pitch_hz >= 400 and burst_duration_seconds <= 0.5:
+        label = "DISTRESS"
+
+    # RESPIRATORY — weak, low pitched, long duration
+    elif pitch_hz <= 250 and burst_duration_seconds >= 2.0 and amplitude < 0.3:
+        label = "RESPIRATORY_DISTRESS"
+
+    # PAIN — sustained medium-high pitch
+    elif 300 <= pitch_hz <= 500 and 1.0 <= burst_duration_seconds <= 3.0:
+        label = "PAIN"
+
+    # HUNGER — rhythmic, mid pitch
+    elif is_rhythmic and 250 <= pitch_hz <= 380:
+        label = "HUNGER"
+
+    # NORMAL — vigorous, healthy range
+    else:
+        label = "NORMAL"
+
+    pattern = CRY_PATTERNS[label]
     return {
-        "classification_id": str(uuid.uuid4()),
-        "patient_id": patient_id,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "layer": layer,
-        "cry_type": cry_type,
-        "cry_characteristics": features or {},
-        "clinical_flag": clinical_flag,
-        "clinical_concern": clinical_concern,
-        "recommended_action": action_map.get(clinical_concern),
-        "confidence": round(confidence, 3),
-        "audio_duration_seconds": round(audio_seconds, 1),
-        "gemma_thinking_trace": thinking_trace
+        "label": label,
+        "severity": pattern["severity"],
+        "description": pattern["description"],
+        "action": pattern["action"],
+        "alert_type": pattern["alert_type"],
+        "clinical_source": pattern["clinical_source"],
+        "features_used": {
+            "pitch_hz": round(pitch_hz, 1),
+            "burst_duration_seconds": round(burst_duration_seconds, 2),
+            "amplitude": round(amplitude, 2),
+            "is_rhythmic": is_rhythmic
+        }
     }
 
 
-#  TEST THE FULL PIPELINE 
+# ─────────────────────────────────────────────────────────────────────────────
+# CELL 4 — Extract features from audio file (if librosa available)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def extract_features(audio_path: str) -> dict:
+    """
+    Extract pitch, duration, amplitude from a .wav file.
+    Use this when you have a real audio sample to test.
+    """
+    if not LIBROSA_AVAILABLE:
+        print("librosa not installed — cannot extract from audio file")
+        return {}
+
+    audio, sr = librosa.load(audio_path, sr=16000)
+
+    # Extract pitch
+    pitches, magnitudes = librosa.piptrack(y=audio, sr=sr)
+    pitch_values = pitches[magnitudes > np.median(magnitudes)]
+    mean_pitch = float(np.mean(pitch_values)) if len(pitch_values) > 0 else 0.0
+
+    # Estimate burst duration using onset detection
+    onsets = librosa.onset.onset_detect(y=audio, sr=sr, units='time')
+    if len(onsets) > 1:
+        burst_duration = float(np.mean(np.diff(onsets)))
+    else:
+        burst_duration = float(len(audio) / sr)
+
+    # Amplitude
+    amplitude = float(np.mean(np.abs(audio)))
+
+    return {
+        "pitch_hz": round(mean_pitch, 1),
+        "burst_duration_seconds": round(burst_duration, 2),
+        "amplitude": round(amplitude, 4)
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CELL 5 — Test the classifier with synthetic scenarios
+# ─────────────────────────────────────────────────────────────────────────────
+
 print("\n" + "═"*50)
-print("TESTING CRY CLASSIFICATION PIPELINE")
+print("TESTING CRY CLASSIFIER")
 print("═"*50)
 
-# Simulate features of a neurological distress cry
-test_features_neuro = {
-    "duration_seconds": 8.5,
-    "pitch": {
-        "mean_hz": 580.0,
-        "max_hz": 720.0,
-        "category": "VERY_HIGH"
+test_cases = [
+    {
+        "scenario": "Meningitis — high pitched short bursts",
+        "pitch_hz": 550.0,
+        "burst_duration_seconds": 0.3,
+        "amplitude": 0.8,
+        "expected": "DISTRESS"
     },
-    "intensity": {
-        "mean": 0.55,
-        "max": 0.89,
-        "category": "NORMAL"
+    {
+        "scenario": "Respiratory distress — weak breathy cry at birth",
+        "pitch_hz": 180.0,
+        "burst_duration_seconds": 3.5,
+        "amplitude": 0.15,
+        "expected": "RESPIRATORY_DISTRESS"
     },
-    "duration_pattern": {
-        "burst_count": 6,
-        "avg_burst_duration_sec": 0.9,
-        "category": "SHORT_BURSTS"
+    {
+        "scenario": "Pain cry — sustained medium pitch",
+        "pitch_hz": 380.0,
+        "burst_duration_seconds": 2.0,
+        "amplitude": 0.6,
+        "expected": "PAIN"
     },
-    "breathiness": {
-        "score": 0.12,
-        "category": "NONE"
+    {
+        "scenario": "Hunger — rhythmic mid pitch",
+        "pitch_hz": 300.0,
+        "burst_duration_seconds": 1.2,
+        "amplitude": 0.5,
+        "expected": "HUNGER"
     },
-    "spectral_centroid_hz": 1850.0
+    {
+        "scenario": "Normal healthy cry",
+        "pitch_hz": 320.0,
+        "burst_duration_seconds": 1.5,
+        "amplitude": 0.7,
+        "expected": "NORMAL"
+    }
+]
+
+all_passed = True
+for test in test_cases:
+    result = classify_cry(
+        pitch_hz=test["pitch_hz"],
+        burst_duration_seconds=test["burst_duration_seconds"],
+        amplitude=test["amplitude"]
+    )
+    passed = result["label"] == test["expected"]
+    if not passed:
+        all_passed = False
+    status = "✅" if passed else "❌"
+    print(f"\n{status} {test['scenario']}")
+    print(f"   Expected: {test['expected']} | Got: {result['label']}")
+    print(f"   Severity: {result['severity']}")
+    print(f"   Action: {result['action'][:60]}...")
+
+print(f"\n{'✅ All tests passed' if all_passed else '❌ Some tests failed — review classification logic'}")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CELL 6 — Export for Android
+# Produces cry_patterns.json → copy to app/src/main/assets/
+# ─────────────────────────────────────────────────────────────────────────────
+
+print("\n" + "═"*50)
+print("EXPORTING FOR ANDROID")
+print("═"*50)
+
+# Full patterns file — used by CryClassifier.kt
+with open("cry_patterns.json", "w") as f:
+    json.dump(CRY_PATTERNS, f, indent=2)
+print("✅ Saved: cry_patterns.json")
+
+# Thresholds only — lightweight version for on-device logic
+THRESHOLDS = {
+    "DISTRESS":             {"pitch_min": 400, "burst_max": 0.5},
+    "RESPIRATORY_DISTRESS": {"pitch_max": 250, "burst_min": 2.0, "amplitude_max": 0.3},
+    "PAIN":                 {"pitch_min": 300, "pitch_max": 500, "burst_min": 1.0, "burst_max": 3.0},
+    "HUNGER":               {"pitch_min": 250, "pitch_max": 380, "rhythmic": True},
+    "NORMAL":               {"pitch_min": 250, "pitch_max": 400}
 }
 
-cry_type, confidence, trace = classify_cry_rules(test_features_neuro)
-result = make_cry_result(
-    patient_id="patient_test_001_newborn",
-    cry_type=cry_type,
-    confidence=confidence,
-    audio_seconds=8.5,
-    features=test_features_neuro,
-    thinking_trace=trace
-)
+with open("cry_thresholds.json", "w") as f:
+    json.dump(THRESHOLDS, f, indent=2)
+print("✅ Saved: cry_thresholds.json")
 
-print(f"\nTest 1 — Neurological Distress Cry:")
-print(f"  Cry type:        {result['cry_type']}")
-print(f"  Clinical flag:   {result['clinical_flag']}")
-print(f"  Concern:         {result['clinical_concern']}")
-print(f"  Confidence:      {result['confidence']}")
-print(f"\nThinking trace:")
-print(result['gemma_thinking_trace'])
-
-# Test 2 — Hunger cry
-test_features_hunger = {
-    "duration_seconds": 5.0,
-    "pitch": {"mean_hz": 320.0, "max_hz": 450.0, "category": "NORMAL"},
-    "intensity": {"mean": 0.55, "max": 0.75, "category": "NORMAL"},
-    "duration_pattern": {"burst_count": 4, "avg_burst_duration_sec": 1.1, "category": "SHORT_BURSTS"},
-    "breathiness": {"score": 0.15, "category": "NONE"},
-    "spectral_centroid_hz": 1200.0
-}
-
-cry_type2, confidence2, trace2 = classify_cry_rules(test_features_hunger)
-result2 = make_cry_result(
-    patient_id="patient_test_002_newborn",
-    cry_type=cry_type2,
-    confidence=confidence2,
-    audio_seconds=5.0,
-    features=test_features_hunger,
-    thinking_trace=trace2
-)
-
-print(f"\nTest 2 — Hunger Cry:")
-print(f"  Cry type:        {result2['cry_type']}")
-print(f"  Clinical flag:   {result2['clinical_flag']}")
-print(f"  Confidence:      {result2['confidence']}")
-
-print(f"\n{'✅' if result['clinical_flag'] else '❌'} Neurological distress flagged correctly")
-print(f"{'✅' if not result2['clinical_flag'] else '❌'} Hunger cry correctly not flagged")
-print("\n✅ Cry classification pipeline complete")
+print("\n" + "═"*50)
+print("COPY THESE FILES TO ANDROID:")
+print("═"*50)
+print("")
+print("  cry_patterns.json    → app/src/main/assets/")
+print("  cry_thresholds.json  → app/src/main/assets/")
+print("")
+print("Then CryClassifier.kt loads them at runtime.")
+print("═"*50)

@@ -1,21 +1,24 @@
 # SurviveMum — RAG Pipeline
 # CELL 6 — Install RAG dependencies
-!pip install -q faiss-cpu sentence-transformers PyPDF2
+# Run this cell first before anything else
+
+# !pip install -q faiss-cpu sentence-transformers PyPDF2
 
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 import json
+import pickle
+import os
 
 print("✅ RAG dependencies ready")
 
-# 
+# ─────────────────────────────────────────────────────────────────────────────
 # CELL 7 — Full clinical knowledge base
-# Replace sample texts with real WHO PDF content
-# 
+# ─────────────────────────────────────────────────────────────────────────────
 
 KNOWLEDGE_BASE = [
-    #  PREECLAMPSIA / HYPERTENSION 
+    #  PREECLAMPSIA / HYPERTENSION
     {
         "id": "who_bp_threshold",
         "source": "WHO ANC Guidelines 2022 — Section 4.3",
@@ -65,8 +68,8 @@ KNOWLEDGE_BASE = [
             "during antenatal visits by community health workers."
         )
     },
-    
-    #  POSTPARTUM HAEMORRHAGE 
+
+    #  POSTPARTUM HAEMORRHAGE
     {
         "id": "who_pph",
         "source": "WHO Guidelines for Management of PPH 2022",
@@ -93,8 +96,8 @@ KNOWLEDGE_BASE = [
             "of excessive bleeding immediately without delay."
         )
     },
-    
-    #  ANAEMIA 
+
+    #  ANAEMIA
     {
         "id": "who_anaemia",
         "source": "WHO ANC Guidelines 2022 — Section 3.1",
@@ -108,8 +111,8 @@ KNOWLEDGE_BASE = [
             "supplementation is recommended for all pregnant women."
         )
     },
-    
-    #  NEWBORN RESPIRATORY 
+
+    #  NEWBORN RESPIRATORY
     {
         "id": "who_newborn_breathing",
         "source": "WHO Essential Newborn Care 2024",
@@ -136,8 +139,8 @@ KNOWLEDGE_BASE = [
             "and requires urgent clinical evaluation."
         )
     },
-    
-    #  NEWBORN JAUNDICE 
+
+    #  NEWBORN JAUNDICE
     {
         "id": "who_jaundice",
         "source": "WHO Newborn Care Guidelines",
@@ -152,8 +155,8 @@ KNOWLEDGE_BASE = [
             "phototherapy or exchange transfusion."
         )
     },
-    
-    #  NEWBORN INFECTION / MENINGITIS 
+
+    #  NEWBORN INFECTION / MENINGITIS
     {
         "id": "who_neonatal_infection",
         "source": "WHO Pocket Book of Hospital Care — Neonatal Infections",
@@ -168,8 +171,8 @@ KNOWLEDGE_BASE = [
             "blood culture and intravenous antibiotic therapy."
         )
     },
-    
-    #  SEPSIS 
+
+    #  SEPSIS
     {
         "id": "who_maternal_sepsis",
         "source": "WHO Recommendations for Prevention and Treatment of Maternal Sepsis",
@@ -184,8 +187,8 @@ KNOWLEDGE_BASE = [
             "and urgent referral."
         )
     },
-    
-    #  REFERRAL 
+
+    #  REFERRAL
     {
         "id": "who_emergency_referral",
         "source": "WHO Emergency Triage Assessment — Obstetric Emergencies",
@@ -199,8 +202,8 @@ KNOWLEDGE_BASE = [
             "can be initiated at the referral facility."
         )
     },
-    
-    #  NIGERIA MDSR PATTERNS 
+
+    #  NIGERIA MDSR PATTERNS
     {
         "id": "mdsr_delay_factors",
         "source": "Nigeria MDSR — Three Delays Analysis",
@@ -224,9 +227,9 @@ for t in sorted(topics):
     count = len([d for d in KNOWLEDGE_BASE if d["topic"] == t])
     print(f"  {t}: {count} document(s)")
 
-# 
+# ─────────────────────────────────────────────────────────────────────────────
 # CELL 8 — Build FAISS index
-# 
+# ─────────────────────────────────────────────────────────────────────────────
 
 print("\nLoading embedding model...")
 embedder = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
@@ -246,32 +249,17 @@ print(f"\n✅ FAISS index built")
 print(f"   {index.ntotal} documents indexed")
 print(f"   Embedding dimension: {dimension}")
 
-# 
+# ─────────────────────────────────────────────────────────────────────────────
 # CELL 9 — Retriever function
-# 
+# ─────────────────────────────────────────────────────────────────────────────
 
 def retrieve_guidelines(query: str, top_k: int = 3) -> list:
-    """
-    Retrieve the most relevant clinical guidelines
-    for a given clinical situation.
-    
-    This runs BEFORE every Gemma 4 assessment.
-    Stops hallucination. Grounds every recommendation
-    in verifiable, retrievable clinical evidence.
-    
-    Args:
-        query: Clinical situation description
-        top_k: Number of guidelines to retrieve
-    
-    Returns:
-        List of relevant guideline documents with scores
-    """
     query_embedding = embedder.encode(
         [query], show_progress_bar=False
     ).astype(np.float32)
-    
+
     distances, indices = index.search(query_embedding, k=top_k)
-    
+
     results = []
     for i, idx in enumerate(indices[0]):
         doc = KNOWLEDGE_BASE[idx]
@@ -284,7 +272,7 @@ def retrieve_guidelines(query: str, top_k: int = 3) -> list:
             "text": doc["text"],
             "similarity_score": round(similarity, 3)
         })
-    
+
     return results
 
 
@@ -293,21 +281,13 @@ def format_for_gemma(
     retrieved_docs: list,
     patient_name: str = "the patient"
 ) -> str:
-    """
-    Format retrieved guidelines + clinical situation
-    into a Gemma 4 prompt that produces:
-    - Visible thinking traces
-    - Grounded clinical recommendations
-    - Risk level assessment
-    - Specific action for TBA
-    """
     guidelines_text = "\n\n".join([
         f"[Guideline {doc['rank']} — {doc['source']}]\n{doc['text']}"
         for doc in retrieved_docs
     ])
-    
-    return f"""You are SurviveMum, a clinical AI guardian for patients 
-who cannot speak. You monitor mothers, newborns, and toddlers in 
+
+    return f"""You are SurviveMum, a clinical AI guardian for patients
+who cannot speak. You monitor mothers, newborns, and toddlers in
 rural Nigeria where no doctor is present.
 
 RETRIEVED CLINICAL GUIDELINES:
@@ -333,7 +313,10 @@ GUIDELINE_CITED: [source of the primary guideline used]
 ACTION: [specific instruction for the TBA in plain language]"""
 
 
-#  TEST THE RAG PIPELINE 
+# ─────────────────────────────────────────────────────────────────────────────
+# CELL 10 — Test the RAG pipeline
+# ─────────────────────────────────────────────────────────────────────────────
+
 print("\n" + "═"*50)
 print("TESTING RAG PIPELINE")
 print("═"*50)
@@ -357,6 +340,7 @@ test_queries = [
     )
 ]
 
+all_passed = True
 for query, scenario in test_queries:
     results = retrieve_guidelines(query)
     print(f"\n{scenario}:")
@@ -365,14 +349,63 @@ for query, scenario in test_queries:
     print(f"    Source: {results[0]['source']}")
     print(f"    Topic:  {results[0]['topic']}")
     print(f"    Score:  {results[0]['similarity_score']}")
-    
-    # Verify correct guideline retrieved
+
     expected_topics = {
         "Preeclampsia scenario": "preeclampsia",
         "Meningitis scenario": "neonatal_infection",
         "PPH scenario": "haemorrhage"
     }
     correct = results[0]['topic'] == expected_topics[scenario]
+    if not correct:
+        all_passed = False
     print(f"  {'✅' if correct else '❌'} Correct guideline topic: {results[0]['topic']}")
 
-print("\n✅ RAG pipeline complete")
+print(f"\n{'✅ All tests passed' if all_passed else '❌ Some tests failed — check retrieval'}")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CELL 11 — Export files for Android
+# This is the new section — saves files that go into app/src/main/assets/
+# ─────────────────────────────────────────────────────────────────────────────
+
+print("\n" + "═"*50)
+print("EXPORTING FILES FOR ANDROID")
+print("═"*50)
+
+# 1. Save the FAISS index
+faiss.write_index(index, "survivemum_rag.index")
+print("✅ Saved: survivemum_rag.index")
+
+# 2. Save the knowledge base so Android can read guideline text
+with open("knowledge_base.json", "w") as f:
+    json.dump(KNOWLEDGE_BASE, f, indent=2)
+print("✅ Saved: knowledge_base.json")
+
+# 3. Save a simple keyword lookup as backup
+# Android uses this if FAISS is too slow on a low-end device
+KEYWORD_LOOKUP = {
+    "blood pressure": "WHO ANC 2022: Systolic ≥140 or diastolic ≥90 after 20 weeks = hypertension in pregnancy. Immediate referral required.",
+    "headache": "WHO ANC 2022: Severe headache with elevated BP = preeclampsia warning sign. Assess immediately.",
+    "bleeding": "WHO PPH 2022: Blood loss ≥500ml within 24 hours = PPH. Grand multiparity = major risk. EMERGENCY referral.",
+    "haemorrhage": "WHO PPH 2022: Uterine atony causes 70-80% of PPH. Keep mother flat, massage uterus, refer NOW.",
+    "cry": "WHO Newborn Care 2024: High-pitched short cry bursts = neurological distress. Possible meningitis. Refer immediately.",
+    "newborn": "WHO Newborn Care 2024: Normal breathing 30-60 breaths/min. Above 60 = respiratory distress. Refer immediately.",
+    "jaundice": "WHO Newborn Care: Jaundice within 24 hours = pathological. Yellow palms/soles = severe. Immediate referral.",
+    "fever": "WHO Sepsis Guidelines: Temp >38C or <36C + heart rate >90 = sepsis risk. IV antibiotics and urgent referral.",
+    "fontanelle": "WHO Neonatal Infection: Bulging fontanelle + high-pitched cry + fever = meningitis. EMERGENCY referral.",
+    "seizure": "WHO Emergency Triage: Convulsions = immediate referral. Do not delay transport for any reason.",
+}
+
+with open("keyword_lookup.json", "w") as f:
+    json.dump(KEYWORD_LOOKUP, f, indent=2)
+print("✅ Saved: keyword_lookup.json")
+
+print("\n" + "═"*50)
+print("COPY THESE FILES TO ANDROID:")
+print("═"*50)
+print("")
+print("  survivemum_rag.index   → app/src/main/assets/")
+print("  knowledge_base.json    → app/src/main/assets/")
+print("  keyword_lookup.json    → app/src/main/assets/")
+print("")
+print("All 3 files must be in assets/ before building the app.")
+print("═"*50)

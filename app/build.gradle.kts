@@ -20,6 +20,9 @@ android {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
         }
     }
+    androidResources {
+        noCompress += "bin"
+    }
 
     packaging {
         resources {

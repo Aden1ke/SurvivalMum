@@ -15,8 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
+import com.survivemum.app.data.SurviveMumDatabase
 import com.survivemum.app.ml.GemmaManager
 import com.survivemum.app.navigation.NavGraph
+import com.survivemum.app.ui.screens.applyLanguage
 import com.survivemum.app.ui.theme.SurvivalMumTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -35,13 +37,31 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        cameraExecutor = Executors.newSingleThreadExecutor()
-        gemmaManager = GemmaManager(this)
+        // ── Apply saved language BEFORE UI loads ──────────────────────────────
+        // This ensures the correct language is shown from the first frame
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val db   = SurviveMumDatabase.getDatabase(this@MainActivity)
+                val user = db.userDao().getCurrentUser()
+                val lang = user?.language ?: "en"
+                runOnUiThread {
+                    applyLanguage(this@MainActivity, lang)
+                }
+            } catch (e: Exception) {
+                // If DB not ready yet, default to English — no crash
+            }
+        }
 
+        // ── Camera executor ───────────────────────────────────────────────────
+        cameraExecutor = Executors.newSingleThreadExecutor()
+
+        // ── Gemma model — load in background ─────────────────────────────────
+        gemmaManager = GemmaManager(this)
         lifecycleScope.launch(Dispatchers.IO) {
             gemmaManager.initializeModel("gemma4.bin")
         }
 
+        // ── Camera permission ─────────────────────────────────────────────────
         if (ContextCompat.checkSelfPermission(
                 this, Manifest.permission.CAMERA
             ) != PackageManager.PERMISSION_GRANTED

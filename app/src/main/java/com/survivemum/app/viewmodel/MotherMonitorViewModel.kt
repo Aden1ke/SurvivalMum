@@ -32,7 +32,7 @@ data class MotherMonitorUIState(
 
 class MotherMonitorViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val db          = SurviveMumDatabase.getDatabase(application)
+    private val db           = SurviveMumDatabase.getDatabase(application)
     private val gemmaManager = GemmaManager(application)
 
     private val _uiState = MutableStateFlow(MotherMonitorUIState())
@@ -71,10 +71,10 @@ class MotherMonitorViewModel(application: Application) : AndroidViewModel(applic
         if (hrHistory.size > 15) hrHistory.removeAt(0)
 
         _uiState.value = _uiState.value.copy(
-            hr        = hr,
-            spo2      = spo2,
-            riskLevel = risk,
-            trendData = hrHistory.toList(),
+            hr         = hr,
+            spo2       = spo2,
+            riskLevel  = risk,
+            trendData  = hrHistory.toList(),
             isScanning = true
         )
 
@@ -93,16 +93,16 @@ class MotherMonitorViewModel(application: Application) : AndroidViewModel(applic
 
         return when {
             // Critical thresholds (PPH / pre-eclampsia indicators)
-            hr > 120 || hr < 40       -> RiskLevel.CRITICAL
-            spo2 < 90                 -> RiskLevel.CRITICAL
-            systolic >= 160           -> RiskLevel.CRITICAL
+            hr > 120 || hr < 40  -> RiskLevel.CRITICAL
+            spo2 < 90            -> RiskLevel.CRITICAL
+            systolic >= 160      -> RiskLevel.CRITICAL
 
             // Warning thresholds
-            hr > 100 || hr < 55       -> RiskLevel.WARNING
-            spo2 < 94                 -> RiskLevel.WARNING
-            systolic in 140..159      -> RiskLevel.WARNING
+            hr > 100 || hr < 55  -> RiskLevel.WARNING
+            spo2 < 94            -> RiskLevel.WARNING
+            systolic in 140..159 -> RiskLevel.WARNING
 
-            else                      -> RiskLevel.NORMAL
+            else                 -> RiskLevel.NORMAL
         }
     }
 
@@ -133,21 +133,23 @@ class MotherMonitorViewModel(application: Application) : AndroidViewModel(applic
                             "Risk: ${it.riskLevel}, Community: ${it.community}"
                 } ?: "Patient details not available."
 
+                // ── FIXED: use correct parameter names from updated GemmaManager ──
                 val response = gemmaManager.assess(
-                    pregnancyHistory = "$patientInfo\n\nRecent visits:\n$history",
-                    currentQuery = """
+                    clinicalSituation = """
+                        $patientInfo
+                        
+                        Recent visits:
+                        $history
+                        
                         Current vitals from camera rPPG:
                         Heart Rate: $hr bpm
                         SpO2: $spo2%
                         Blood Pressure: ${_uiState.value.bp}
-                        
                         Risk classification: ${_uiState.value.riskLevel}
                         
-                        Provide:
-                        1. What these vitals indicate
-                        2. Immediate danger signs to watch
-                        3. Recommended action for the TBA
-                    """.trimIndent()
+                        What do these vitals indicate? What immediate danger signs should the TBA watch for? What action is recommended?
+                    """.trimIndent(),
+                    patientName = patient?.fullName ?: "the patient"
                 )
 
                 // Parse Gemma response into reasoning steps for the UI
@@ -156,7 +158,10 @@ class MotherMonitorViewModel(application: Application) : AndroidViewModel(applic
                     .filter { it.isNotBlank() }
                     .take(4)
                     .mapIndexed { index, line ->
-                        ReasoningStep(index + 1, line.trim().removePrefix("${index + 1}. "))
+                        ReasoningStep(
+                            index + 1,
+                            line.trim().removePrefix("${index + 1}. ")
+                        )
                     }
 
                 _uiState.value = _uiState.value.copy(
@@ -169,7 +174,10 @@ class MotherMonitorViewModel(application: Application) : AndroidViewModel(applic
                 Log.e("MotherMonitorVM", "Gemma assessment failed", e)
                 _uiState.value = _uiState.value.copy(
                     reasoningSteps = listOf(
-                        ReasoningStep(1, "AI assessment unavailable: ${e.message?.take(60)}")
+                        ReasoningStep(
+                            1,
+                            "AI assessment unavailable: ${e.message?.take(60)}"
+                        )
                     )
                 )
             }
@@ -180,7 +188,6 @@ class MotherMonitorViewModel(application: Application) : AndroidViewModel(applic
     // (BP cannot be measured by camera — requires a cuff)
     fun updateBP(bp: String) {
         _uiState.value = _uiState.value.copy(bp = bp)
-        // Re-assess risk with updated BP
         val risk = assessRisk(_uiState.value.hr, _uiState.value.spo2, bp)
         _uiState.value = _uiState.value.copy(riskLevel = risk)
     }

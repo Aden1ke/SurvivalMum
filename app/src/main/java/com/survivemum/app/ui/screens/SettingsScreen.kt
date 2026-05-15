@@ -1,5 +1,8 @@
 package com.survivemum.app.ui.screens
 
+import android.app.Activity
+import android.content.Context
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -17,37 +20,52 @@ import androidx.navigation.NavController
 import com.survivemum.app.data.SurviveMumDatabase
 import com.survivemum.app.ui.theme.*
 import kotlinx.coroutines.launch
+import java.util.Locale
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Applies the selected locale to the app immediately
+// Called after saving — restarts the activity so strings reload in new language
+// ─────────────────────────────────────────────────────────────────────────────
+fun applyLanguage(context: Context, languageCode: String) {
+    val locale = Locale(languageCode)
+    Locale.setDefault(locale)
+    val config = Configuration(context.resources.configuration)
+    config.setLocale(locale)
+    @Suppress("DEPRECATION")
+    context.resources.updateConfiguration(config, context.resources.displayMetrics)
+}
 
 @Composable
 fun SettingsScreen(navController: NavController) {
 
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val scope   = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
-    var selectedLanguage by remember { mutableStateOf("en") }
-    var selectedSensitivity by remember { mutableStateOf("STANDARD") }
+    var selectedLanguage     by remember { mutableStateOf("en") }
+    var selectedSensitivity  by remember { mutableStateOf("STANDARD") }
     var notificationsEnabled by remember { mutableStateOf(true) }
-    var userId by remember { mutableStateOf("") }
+    var userId               by remember { mutableStateOf("") }
     var showLanguageDropdown by remember { mutableStateOf(false) }
-    var isSaved by remember { mutableStateOf(false) }
+    var isSaved              by remember { mutableStateOf(false) }
 
     val languages = mapOf(
-        "en" to "English",
-        "yo" to "Yoruba",
-        "ha" to "Hausa",
-        "ig" to "Igbo",
+        "en"  to "English",
+        "yo"  to "Yoruba",
+        "ha"  to "Hausa",
+        "ig"  to "Igbo",
         "pcm" to "Nigerian Pidgin"
     )
 
+    // Load saved preferences on entry
     LaunchedEffect(Unit) {
-        val db = SurviveMumDatabase.getDatabase(context)
+        val db   = SurviveMumDatabase.getDatabase(context)
         val user = db.userDao().getCurrentUser()
         if (user != null) {
             userId = user.userId
             val prefs = db.preferenceDao().getPreferences(user.userId)
             if (prefs != null) {
-                selectedLanguage = prefs.language
+                selectedLanguage    = prefs.language
                 selectedSensitivity = prefs.monitoringSensitivity
                 notificationsEnabled = prefs.notificationsEnabled == 1
             }
@@ -60,7 +78,7 @@ fun SettingsScreen(navController: NavController) {
             .background(MaterialTheme.colorScheme.background)
     ) {
 
-        // Top Bar with statusBarsPadding
+        // Top Bar
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -95,7 +113,7 @@ fun SettingsScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // Language
+            // ── Language ──────────────────────────────────────────────────────
             ProfileCard(title = "Language") {
                 Spacer(modifier = Modifier.height(4.dp))
                 Box {
@@ -127,9 +145,19 @@ fun SettingsScreen(navController: NavController) {
                         }
                     }
                 }
+
+                // Show hint that save will restart the app
+                if (!isSaved) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        "Saving will restart the app to apply the language.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
-            // Monitoring Sensitivity
+            // ── Monitoring Sensitivity ────────────────────────────────────────
             ProfileCard(title = "Monitoring Sensitivity") {
                 Text(
                     text = "Controls how quickly SurviveMum fires alerts",
@@ -138,9 +166,9 @@ fun SettingsScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 listOf(
-                    "LOW" to "Fewer alerts — less sensitive",
+                    "LOW"      to "Fewer alerts — less sensitive",
                     "STANDARD" to "Recommended for most TBAs",
-                    "HIGH" to "More alerts — higher caution"
+                    "HIGH"     to "More alerts — higher caution"
                 ).forEach { (value, description) ->
                     Row(
                         modifier = Modifier
@@ -150,7 +178,7 @@ fun SettingsScreen(navController: NavController) {
                     ) {
                         RadioButton(
                             selected = selectedSensitivity == value,
-                            onClick = {
+                            onClick  = {
                                 selectedSensitivity = value
                                 isSaved = false
                             },
@@ -175,7 +203,7 @@ fun SettingsScreen(navController: NavController) {
                 }
             }
 
-            // Notifications
+            // ── Notifications ─────────────────────────────────────────────────
             ProfileCard(title = "Notifications") {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -200,20 +228,22 @@ fun SettingsScreen(navController: NavController) {
                 }
             }
 
-            // App Info
+            // ── App Info ──────────────────────────────────────────────────────
             ProfileCard(title = "About SurviveMum") {
-                ProfileRow("Version", "1.0.0")
-                ProfileRow("Model", "Gemma 4 E4B")
-                ProfileRow("Mode", "100% Offline")
-                ProfileRow("Hackathon", "Gemma 4 Good — Google DeepMind")
+                ProfileRow("Version",    "1.0.0")
+                ProfileRow("Model",      "Gemma 4 E4B")
+                ProfileRow("Mode",       "100% Offline")
+                ProfileRow("Hackathon",  "Gemma 4 Good — Google DeepMind")
             }
 
-            // Save Button
+            // ── Save Button ───────────────────────────────────────────────────
             Button(
                 onClick = {
                     scope.launch {
                         if (userId.isNotBlank()) {
                             val db = SurviveMumDatabase.getDatabase(context)
+
+                            // Save to database
                             db.preferenceDao().updateLanguage(
                                 userId,
                                 selectedLanguage,
@@ -224,7 +254,13 @@ fun SettingsScreen(navController: NavController) {
                                 selectedSensitivity,
                                 System.currentTimeMillis().toString()
                             )
+
                             isSaved = true
+
+                            // Apply language immediately and restart activity
+                            // so all string resources reload in the new language
+                            applyLanguage(context, selectedLanguage)
+                            (context as? Activity)?.recreate()
                         }
                     }
                 },
@@ -243,7 +279,7 @@ fun SettingsScreen(navController: NavController) {
                 )
             }
 
-            // Sign out
+            // ── Sign Out ──────────────────────────────────────────────────────
             OutlinedButton(
                 onClick = {
                     navController.navigate("user_type") {

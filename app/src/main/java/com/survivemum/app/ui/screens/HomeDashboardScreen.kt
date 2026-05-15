@@ -24,10 +24,6 @@ import com.survivemum.app.data.SurviveMumDatabase
 import com.survivemum.app.navigation.Screen
 import com.survivemum.app.ui.theme.*
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Entry point — routes to the correct dashboard based on userType
-// ─────────────────────────────────────────────────────────────────────────────
-
 @Composable
 fun HomeDashboardScreen(navController: NavController, userType: String) {
     if (userType == "TBA") {
@@ -82,40 +78,29 @@ fun TBADashboard(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
 
-                // Stats
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        StatCard(Modifier.weight(1f), "${patients.size}", "Active Patients", MotherPrimary)
                         StatCard(
-                            modifier = Modifier.weight(1f),
-                            number   = "${patients.size}",
-                            label    = "Active Patients",
-                            color    = MotherPrimary
-                        )
-                        StatCard(
-                            modifier = Modifier.weight(1f),
-                            number   = "${patients.count {
-                                it.riskLevel == "HIGH" || it.riskLevel == "CRITICAL"
-                            }}",
-                            label    = "High Risk",
-                            color    = SurviveMumRed
+                            Modifier.weight(1f),
+                            "${patients.count { it.riskLevel == "HIGH" || it.riskLevel == "CRITICAL" }}",
+                            "High Risk",
+                            SurviveMumRed
                         )
                     }
                 }
 
-                // Monitoring tools
                 item { SectionHeader("Monitoring Tools") }
 
                 item {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        MonitoringToolCard(Modifier.weight(1f), "📷", "Camera Monitor",
-                            "rPPG vitals via AI", MotherPrimary) {
+                        MonitoringToolCard(Modifier.weight(1f), "📷", "Camera Monitor", "rPPG vitals via AI", MotherPrimary) {
                             navController.navigate(Screen.CameraMonitor.route)
                         }
-                        MonitoringToolCard(Modifier.weight(1f), "🤱", "Mother Monitor",
-                            "ANC card + vitals", SurviveMumRed) {
+                        MonitoringToolCard(Modifier.weight(1f), "🤱", "Mother Monitor", "ANC card + vitals", SurviveMumRed) {
                             navController.navigate(Screen.MotherMonitor.route)
                         }
                     }
@@ -123,56 +108,40 @@ fun TBADashboard(navController: NavController) {
 
                 item {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        MonitoringToolCard(Modifier.weight(1f), "👶", "Newborn Monitor",
-                            "Cry + visual assess", NewbornPrimary) {
+                        MonitoringToolCard(Modifier.weight(1f), "👶", "Newborn Monitor", "Cry + visual assess", NewbornPrimary) {
                             navController.navigate(Screen.NewbornMonitor.route)
                         }
-                        MonitoringToolCard(Modifier.weight(1f), "🧒", "Toddler Monitor",
-                            "1–5 yr development", Color(0xFF7B5EA7)) {
+                        MonitoringToolCard(Modifier.weight(1f), "🧒", "Toddler Monitor", "1–5 yr development", Color(0xFF7B5EA7)) {
                             navController.navigate(Screen.ToddlerMonitor.route)
                         }
                     }
                 }
 
-                // Add patient button
-                // FIX 5: pass "PATIENT" not "mother" so SignupScreen knows this is a
-                // TBA registering a patient, not a new user creating their own account.
-                // SignupScreen("PATIENT") creates a PatientEntity (not UserEntity),
-                // then pops back to THIS dashboard — not to UserTypeScreen.
                 item {
                     Button(
-                        onClick = {
-                            navController.navigate(Screen.Signup.go("PATIENT"))
-                        },
+                        onClick = { navController.navigate(Screen.Signup.go("PATIENT")) },
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = SurviveMumRed)
                     ) {
-                        Text("+ Add New Patient",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = Color.White)
+                        Text("+ Add New Patient", style = MaterialTheme.typography.labelLarge, color = Color.White)
                     }
                 }
 
-                // Patient list
                 item { SectionHeader("Your Patients") }
 
                 if (patients.isEmpty()) {
-                    item {
-                        EmptyCard("Tap Add New Patient to register\nyour first mother")
-                    }
+                    item { EmptyCard("Tap Add New Patient to register\nyour first mother") }
                 } else {
                     items(patients) { patient ->
                         TBAPatientCard(
                             patient       = patient,
-                            onViewProfile = {
-                                navController.navigate(Screen.PatientProfile.go(patient.patientId))
-                            },
-                            onViewHistory = {
-                                navController.navigate(Screen.PatientHistory.go(patient.patientId))
-                            },
-                            onViewAlerts  = {
-                                navController.navigate(Screen.AlertHistory.go(patient.patientId))
+                            onViewProfile = { navController.navigate(Screen.PatientProfile.go(patient.patientId)) },
+                            onViewHistory = { navController.navigate(Screen.PatientHistory.go(patient.patientId)) },
+                            onViewAlerts  = { navController.navigate(Screen.AlertHistory.go(patient.patientId)) },
+                            onViewQR      = {
+                                // Pass patientId so QRCodeScreen loads this specific patient
+                                navController.navigate("${Screen.QRCode.route}?patientId=${patient.patientId}")
                             }
                         )
                     }
@@ -229,36 +198,31 @@ fun MotherDashboard(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
 
-                // Stats
                 item {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         StatCard(
-                            modifier = Modifier.weight(1f),
-                            number   = if ((myProfile?.weeksPregnant ?: 0) > 0)
-                                "${myProfile?.weeksPregnant}" else "—",
-                            label    = "Weeks Pregnant",
-                            color    = MotherPrimary
+                            Modifier.weight(1f),
+                            if ((myProfile?.weeksPregnant ?: 0) > 0) "${myProfile?.weeksPregnant}" else "—",
+                            "Weeks Pregnant",
+                            MotherPrimary
                         )
                         StatCard(
-                            modifier = Modifier.weight(1f),
-                            number   = myProfile?.riskLevel ?: "—",
-                            label    = "Risk Level",
-                            color    = riskColor(myProfile?.riskLevel ?: "LOW")
+                            Modifier.weight(1f),
+                            myProfile?.riskLevel ?: "—",
+                            "Risk Level",
+                            riskColor(myProfile?.riskLevel ?: "LOW")
                         )
                     }
                 }
 
-                // Only the two tools a mother needs
                 item { SectionHeader("My Monitoring Tools") }
 
                 item {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        MonitoringToolCard(Modifier.weight(1f), "📷", "Camera Monitor",
-                            "Check my vitals", MotherPrimary) {
+                        MonitoringToolCard(Modifier.weight(1f), "📷", "Camera Monitor", "Check my vitals", MotherPrimary) {
                             navController.navigate(Screen.CameraMonitor.route)
                         }
-                        MonitoringToolCard(Modifier.weight(1f), "👶", "Newborn Monitor",
-                            "Monitor my baby", NewbornPrimary) {
+                        MonitoringToolCard(Modifier.weight(1f), "👶", "Newborn Monitor", "Monitor my baby", NewbornPrimary) {
                             navController.navigate(Screen.NewbornMonitor.route)
                         }
                     }
@@ -271,16 +235,12 @@ fun MotherDashboard(navController: NavController) {
                 } else {
                     item {
                         MotherProfileCard(
-                            patient            = myProfile!!,
-                            onViewRecord       = {
-                                navController.navigate(Screen.PatientProfile.go(myProfile!!.patientId))
-                            },
-                            onViewNewbornRecord = {
-                                navController.navigate(Screen.NewbornRecord.go(myProfile!!.patientId))
-                            },
-                            onViewAlerts       = {
-                                navController.navigate(Screen.AlertHistory.go(myProfile!!.patientId))
-                            }
+                            patient             = myProfile!!,
+                            onViewRecord        = { navController.navigate(Screen.PatientProfile.go(myProfile!!.patientId)) },
+                            onViewNewbornRecord = { navController.navigate(Screen.NewbornRecord.go(myProfile!!.patientId)) },
+                            onViewAlerts        = { navController.navigate(Screen.AlertHistory.go(myProfile!!.patientId)) },
+                            // Mother's own QR — no patientId needed, ViewModel loads her own record
+                            onViewQR            = { navController.navigate(Screen.QRCode.route) }
                         )
                     }
                 }
@@ -311,26 +271,17 @@ fun DashboardTopBar(name: String, onSettings: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text("SurviveMum",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = SurviveMumRed)
-                    Text("Welcome, $name",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.8f))
+                    Text("SurviveMum", style = MaterialTheme.typography.titleLarge, color = SurviveMumRed)
+                    Text("Welcome, $name", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
                 }
                 IconButton(onClick = onSettings) {
                     Text("⚙", fontSize = 22.sp, color = Color.White)
                 }
             }
             Spacer(Modifier.height(12.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Box(Modifier.size(8.dp).clip(CircleShape).background(NewbornPrimary))
-                Text("Offline — Gemma 4 running locally",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = NewbornPrimary)
+                Text("Offline — Gemma 4 running locally", style = MaterialTheme.typography.labelSmall, color = NewbornPrimary)
             }
         }
     }
@@ -345,7 +296,8 @@ fun TBAPatientCard(
     patient       : PatientEntity,
     onViewProfile : () -> Unit,
     onViewHistory : () -> Unit,
-    onViewAlerts  : () -> Unit
+    onViewAlerts  : () -> Unit,
+    onViewQR      : () -> Unit          // ADDED — navigates to QRCodeScreen with patientId
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -363,26 +315,40 @@ fun TBAPatientCard(
                     Text(patient.fullName, style = MaterialTheme.typography.titleMedium)
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        if (patient.weeksPregnant > 0) "${patient.weeksPregnant} weeks pregnant"
-                        else "Postpartum",
+                        if (patient.weeksPregnant > 0) "${patient.weeksPregnant} weeks pregnant" else "Postpartum",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (patient.community.isNotBlank()) {
-                        Text(patient.community,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(patient.community, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 RiskBadge(patient.riskLevel)
             }
+
             Spacer(Modifier.height(12.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(Modifier.height(10.dp))
+
+            // Row 1 — core actions
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PatientActionButton(Modifier.weight(1f), "👤 Profile",  onViewProfile)
                 PatientActionButton(Modifier.weight(1f), "📋 History",  onViewHistory)
                 PatientActionButton(Modifier.weight(1f), "🔔 Alerts",   onViewAlerts)
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // Row 2 — QR portable record
+            OutlinedButton(
+                onClick = onViewQR,
+                modifier = Modifier.fillMaxWidth().height(40.dp),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MotherPrimary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MotherPrimary.copy(alpha = 0.4f))
+            ) {
+                Text("📋 QR Health Record", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -393,7 +359,8 @@ fun MotherProfileCard(
     patient             : PatientEntity,
     onViewRecord        : () -> Unit,
     onViewNewbornRecord : () -> Unit,
-    onViewAlerts        : () -> Unit
+    onViewAlerts        : () -> Unit,
+    onViewQR            : () -> Unit    // ADDED — navigates to QRCodeScreen (no patientId needed)
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -411,26 +378,40 @@ fun MotherProfileCard(
                     Text(patient.fullName, style = MaterialTheme.typography.titleMedium)
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        if (patient.weeksPregnant > 0) "${patient.weeksPregnant} weeks pregnant"
-                        else "Postpartum",
+                        if (patient.weeksPregnant > 0) "${patient.weeksPregnant} weeks pregnant" else "Postpartum",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (patient.community.isNotBlank()) {
-                        Text(patient.community,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(patient.community, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 RiskBadge(patient.riskLevel)
             }
+
             Spacer(Modifier.height(12.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(Modifier.height(10.dp))
+
+            // Row 1 — core actions
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PatientActionButton(Modifier.weight(1f), "📄 My Record",   onViewRecord)
                 PatientActionButton(Modifier.weight(1f), "👶 Baby Record", onViewNewbornRecord)
                 PatientActionButton(Modifier.weight(1f), "🔔 My Alerts",  onViewAlerts)
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // Row 2 — QR portable record
+            OutlinedButton(
+                onClick = onViewQR,
+                modifier = Modifier.fillMaxWidth().height(40.dp),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MotherPrimary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MotherPrimary.copy(alpha = 0.4f))
+            ) {
+                Text("📋 My QR Health Record", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -442,12 +423,12 @@ fun MotherProfileCard(
 
 @Composable
 fun MonitoringToolCard(
-    modifier  : Modifier = Modifier,
-    emoji     : String,
-    title     : String,
-    subtitle  : String,
-    color     : Color,
-    onClick   : () -> Unit
+    modifier : Modifier = Modifier,
+    emoji    : String,
+    title    : String,
+    subtitle : String,
+    color    : Color,
+    onClick  : () -> Unit
 ) {
     Card(
         modifier = modifier.height(100.dp).clickable { onClick() },
@@ -461,12 +442,8 @@ fun MonitoringToolCard(
         ) {
             Text(emoji, fontSize = 26.sp)
             Column {
-                Text(title,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = color, fontWeight = FontWeight.Bold, maxLines = 1)
-                Text(subtitle,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                Text(title, style = MaterialTheme.typography.labelLarge, color = color, fontWeight = FontWeight.Bold, maxLines = 1)
+                Text(subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
             }
         }
     }
@@ -482,18 +459,14 @@ fun StatCard(modifier: Modifier = Modifier, number: String, label: String, color
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(number, fontSize = 32.sp, fontWeight = FontWeight.Bold, color = color)
-            Text(label, style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
 fun SectionHeader(title: String, modifier: Modifier = Modifier) {
-    Text(title,
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.onBackground,
-        modifier = modifier.padding(top = 4.dp))
+    Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, modifier = modifier.padding(top = 4.dp))
 }
 
 @Composable
@@ -515,8 +488,7 @@ fun PatientActionButton(modifier: Modifier = Modifier, label: String, onClick: (
         modifier = modifier.height(40.dp),
         shape = RoundedCornerShape(10.dp),
         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.onSurface)
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
     ) {
         Text(label, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
     }
@@ -533,12 +505,9 @@ fun EmptyCard(message: String) {
             modifier = Modifier.fillMaxWidth().padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("No patients yet", style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("No patients yet", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))
-            Text(message, style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center)
+            Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         }
     }
 }

@@ -1,4 +1,5 @@
 package com.survivemum.app.security.safety
+import com.survivemum.app.ml.GemmaManager
 
 import android.content.Context
 import android.util.Log
@@ -24,7 +25,8 @@ import com.survivemum.app.security.models.SafetyVerdict
  */
 class SafetyScreener(
     private val context: Context? = null,
-    private val auditLog: SafetyAuditLog = SafetyAuditLog.Noop
+    private val auditLog: SafetyAuditLog = SafetyAuditLog.Noop,
+    private val gemma: GemmaManager? = null
 ) {
 
     companion object {
@@ -114,28 +116,38 @@ class SafetyScreener(
 
     /**
      * Screen output AFTER Gemma generates it, BEFORE the TBA sees it.
-     * The critical gate — catches dangerous medical advice, false certainty,
-     * WHO guideline violations, harmful Nigerian-context recommendations.
+     *
+     * Two-layer screening:
+     *   Layer 1 — Rule-based (deterministic, fast, ~50ms). Catches known patterns.
+     *   Layer 2 — Gemma 4 policy-grounded (semantic, slower, only runs if Layer 1 SAFE).
+     *             Catches nuanced unsafe content that rules miss.
+     *
+     * If Layer 1 already says UNSAFE, we don't waste a Gemma call — we trust the
+     * rule and block. Layer 2 only adds value when rules say SAFE/FLAGGED.
      *
      * Fails CLOSED: on error, returns UNSAFE so nothing slips past.
-     *
-     * Every call produces one audit log entry, regardless of verdict.
      */
     fun screenOutput(output: String, alertId: String? = null): SafetyResult {
         val start = System.currentTimeMillis()
 
         val result = try {
-            val raw = if (isModelLoaded) {
-                // TODO: Replace with actual ShieldGemma inference when LiteRT is ready
-                ruleBasedScreenOutput(output)
+            // Layer 1: rule-based fast path
+            val ruleResult = ruleBasedScreenOutput(output)
+
+            // If rules already blocked it, no need to call Gemma
+            if (ruleResult.verdict == SafetyVerdict.UNSAFE) {
+                ruleResult.copy(screeningMs = System.currentTimeMillis() - start)
+            } else if (gemma != null) {
+                // Layer 2: Gemma semantic screening
+                val gemmaResult = gemmaScreen(output)
+                combineResults(ruleResult, gemmaResult)
+                    .copy(screeningMs = System.currentTimeMillis() - start)
             } else {
-                Log.w(TAG, "ShieldGemma not loaded — using rule-based output screening")
-                ruleBasedScreenOutput(output)
+                // No Gemma available — rule result stands
+                ruleResult.copy(screeningMs = System.currentTimeMillis() - start)
             }
-            raw.copy(screeningMs = System.currentTimeMillis() - start)
         } catch (e: Exception) {
             Log.e(TAG, "Output screening failed: ${e.message}")
-            // Fail CLOSED: block rather than risk unsafe content reaching the TBA
             SafetyResult(
                 verdict = SafetyVerdict.UNSAFE,
                 reason = "Safety screening errored — blocking output as precaution",
@@ -153,6 +165,106 @@ class SafetyScreener(
         )
 
         return result
+    }
+
+    /**
+     * Ask Gemma 4 to classify the content against the policies.
+     * Returns SAFE/FLAGGED/UNSAFE parsed from Gemma's structured response.
+     *
+     * If Gemma errors or returns unparseable output, returns SAFE — Layer 1
+     * already screened it, so a Gemma failure shouldn't escalate the verdict.
+     */
+    private fun gemmaScreen(content: String): SafetyResult {
+        val safetyPrompt = buildString {
+            appendLine("You are a safety classifier. Evaluate the following AI-generated medical alert text against these policies:")
+            appendLine()
+            Policies.ALL_POLICIES.forEachIndexed { i, p ->
+                appendLine("${i + 1}. $p")
+            }
+            appendLine()
+            appendLine("ALERT TEXT:")
+            appendLine(content)
+            appendLine()
+            appendLine("Reply in this exact format:")
+            appendLine("VERDICT: [SAFE / FLAGGED / UNSAFE]")
+            appendLine("VIOLATED: [comma-separated policy numbers, or NONE]")
+            appendLine("REASON: [one short sentence]")
+        }
+
+        return try {
+            val response = gemma?.assess(
+                clinicalSituation = safetyPrompt,
+                patientName = "safety-screen"
+            ) ?: return SafetyResult(verdict = SafetyVerdict.SAFE)
+
+            parseGemmaSafetyResponse(response)
+        } catch (e: Exception) {
+            Log.w(TAG, "Gemma safety screen errored — deferring to rule result: ${e.message}")
+            SafetyResult(verdict = SafetyVerdict.SAFE, reason = "Gemma layer skipped due to error")
+        }
+    }
+
+    /**
+     * Parse Gemma's structured safety response into a SafetyResult.
+     * Tolerant of formatting variations — Gemma doesn't always follow the
+     * format exactly, and we'd rather degrade gracefully than crash.
+     */
+    private fun parseGemmaSafetyResponse(response: String): SafetyResult {
+        val verdictRegex = Regex("VERDICT:\\s*(SAFE|FLAGGED|UNSAFE)", RegexOption.IGNORE_CASE)
+        val violatedRegex = Regex("VIOLATED:\\s*([^\\n]+)", RegexOption.IGNORE_CASE)
+        val reasonRegex = Regex("REASON:\\s*([^\\n]+)", RegexOption.IGNORE_CASE)
+
+        val verdict = verdictRegex.find(response)?.groupValues?.get(1)?.uppercase()?.let {
+            try { SafetyVerdict.valueOf(it) } catch (_: Exception) { SafetyVerdict.SAFE }
+        } ?: SafetyVerdict.SAFE
+
+        val violatedRaw = violatedRegex.find(response)?.groupValues?.get(1)?.trim() ?: ""
+        val violatedPolicies = if (violatedRaw.equals("NONE", ignoreCase = true) || violatedRaw.isEmpty()) {
+            emptyList()
+        } else {
+            // Map policy numbers back to policy names
+            violatedRaw.split(",")
+                .mapNotNull { it.trim().toIntOrNull() }
+                .mapNotNull { num -> Policies.ALL_POLICIES.getOrNull(num - 1) }
+        }
+
+        val reason = reasonRegex.find(response)?.groupValues?.get(1)?.trim()
+
+        return SafetyResult(
+            verdict = verdict,
+            reason = reason ?: "Gemma layer: $verdict",
+            policiesViolated = violatedPolicies,
+            confidence = 0.85  // Gemma's confidence is reasonably high when it responds
+        )
+    }
+
+    /**
+     * Combine rule-based and Gemma results.
+     * Take the more severe verdict. Merge policy lists. Prefer Gemma's reason
+     * when it adds new information, otherwise keep rule reason.
+     */
+    private fun combineResults(rule: SafetyResult, gemma: SafetyResult): SafetyResult {
+        val combinedVerdict = when {
+            rule.verdict == SafetyVerdict.UNSAFE || gemma.verdict == SafetyVerdict.UNSAFE -> SafetyVerdict.UNSAFE
+            rule.verdict == SafetyVerdict.FLAGGED || gemma.verdict == SafetyVerdict.FLAGGED -> SafetyVerdict.FLAGGED
+            else -> SafetyVerdict.SAFE
+        }
+
+        val combinedPolicies = (rule.policiesViolated + gemma.policiesViolated).distinct()
+
+        val combinedReason = listOfNotNull(rule.reason, gemma.reason)
+            .filter { it.isNotEmpty() }
+            .joinToString(" | ")
+            .ifEmpty { null }
+
+        val combinedConfidence = maxOf(rule.confidence, gemma.confidence)
+
+        return SafetyResult(
+            verdict = combinedVerdict,
+            reason = combinedReason,
+            policiesViolated = combinedPolicies,
+            confidence = combinedConfidence
+        )
     }
 
     // ----- Rule-based screening (fallback + first line of defense) -----

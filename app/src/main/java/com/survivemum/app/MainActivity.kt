@@ -46,12 +46,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ── Security layer ────────────────────────────────────────────────────
-        // Wire up first. This creates the safety audit database, starts the
-        // connectivity listener, and prepares the alert dispatcher to receive
-        // queued alerts gated by the SafetyScreener.
-        securityModule = SecurityModule(applicationContext)
-
         // ── Apply saved language BEFORE UI loads ──────────────────────────────
         // Ensures the correct language is shown from the first frame.
         lifecycleScope.launch(Dispatchers.IO) {
@@ -70,11 +64,21 @@ class MainActivity : ComponentActivity() {
         // ── Camera executor ───────────────────────────────────────────────────
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        // ── Gemma model — load in background ─────────────────────────────────
+        // ── Gemma model — create instance and start loading in background ────
+        // We create the GemmaManager reference now (cheap, just allocates the
+        // object), but the actual model load runs on IO. SecurityModule below
+        // gets the reference and the safety screener will call into Gemma once
+        // it's loaded. While loading, Layer 2 returns SAFE and Layer 1 still works.
         gemmaManager = GemmaManager(this)
         lifecycleScope.launch(Dispatchers.IO) {
             gemmaManager.initializeModel("gemma4.bin")
         }
+
+        // ── Security layer (with Gemma as Layer 2 safety classifier) ──────────
+        // Creates the safety audit database, starts the connectivity listener,
+        // wires Gemma into the safety screener, and prepares the alert dispatcher
+        // to receive queued alerts gated by two-layer safety screening.
+        securityModule = SecurityModule(applicationContext, gemmaManager)
 
         // ── Camera permission ─────────────────────────────────────────────────
         if (ContextCompat.checkSelfPermission(

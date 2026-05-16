@@ -1,0 +1,12 @@
+{
+  "blood pressure": "WHO ANC 2022: Systolic \u2265140 or diastolic \u226590 after 20 weeks = hypertension in pregnancy. Immediate referral required.",
+  "headache": "WHO ANC 2022: Severe headache with elevated BP = preeclampsia warning sign. Assess immediately.",
+  "bleeding": "WHO PPH 2022: Blood loss \u2265500ml within 24 hours = PPH. Grand multiparity = major risk. EMERGENCY referral.",
+  "haemorrhage": "WHO PPH 2022: Uterine atony causes 70-80% of PPH. Keep mother flat, massage uterus, refer NOW.",
+  "cry": "WHO Newborn Care 2024: High-pitched short cry bursts = neurological distress. Possible meningitis. Refer immediately.",
+  "newborn": "WHO Newborn Care 2024: Normal breathing 30-60 breaths/min. Above 60 = respiratory distress. Refer immediately.",
+  "jaundice": "WHO Newborn Care: Jaundice within 24 hours = pathological. Yellow palms/soles = severe. Immediate referral.",
+  "fever": "WHO Sepsis Guidelines: Temp >38C or <36C + heart rate >90 = sepsis risk. IV antibiotics and urgent referral.",
+  "fontanelle": "WHO Neonatal Infection: Bulging fontanelle + high-pitched cry + fever = meningitis. EMERGENCY referral.",
+  "seizure": "WHO Emergency Triage: Convulsions = immediate referral. Do not delay transport for any reason."
+}

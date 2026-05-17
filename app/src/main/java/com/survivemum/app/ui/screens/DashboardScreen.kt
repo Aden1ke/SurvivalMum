@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.survivemum.app.ui.components.AIStatusIndicator
+import com.survivemum.app.navigation.Screen
 
 @Composable
 fun DashboardScreen(navController: NavController) {
@@ -67,7 +68,7 @@ fun DashboardScreen(navController: NavController) {
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            
+
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -128,7 +129,7 @@ fun DashboardScreen(navController: NavController) {
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            
+
             item {
                 Surface(
                     onClick = { navController.navigate(Screen.QRCode.route) },
@@ -161,7 +162,7 @@ fun DashboardScreen(navController: NavController) {
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            
+
             items(3) { index ->
                 AIActivityCard(
                     title = if (index == 0) "Newborn Cry Analysis" else "Mother Vital Trend",
@@ -244,4 +245,4 @@ fun AIActivityCard(title: String, time: String, result: String) {
             Text(time, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
         }
     }
-}
+}  

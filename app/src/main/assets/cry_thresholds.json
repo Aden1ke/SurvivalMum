@@ -1,0 +1,26 @@
+{
+  "DISTRESS": {
+    "pitch_min": 400,
+    "burst_max": 0.5
+  },
+  "RESPIRATORY_DISTRESS": {
+    "pitch_max": 250,
+    "burst_min": 2.0,
+    "amplitude_max": 0.3
+  },
+  "PAIN": {
+    "pitch_min": 300,
+    "pitch_max": 500,
+    "burst_min": 1.0,
+    "burst_max": 3.0
+  },
+  "HUNGER": {
+    "pitch_min": 250,
+    "pitch_max": 380,
+    "rhythmic": true
+  },
+  "NORMAL": {
+    "pitch_min": 250,
+    "pitch_max": 400
+  }
+}

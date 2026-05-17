@@ -1,0 +1,53 @@
+{
+  "DISTRESS": {
+    "description": "High-pitched short bursts \u2014 possible meningitis or neurological irritability",
+    "clinical_source": "WHO Pocket Book: High-pitched cry = neurological distress flag",
+    "severity": "CRITICAL",
+    "pitch_hz_min": 400,
+    "pitch_hz_max": 800,
+    "burst_duration_max_seconds": 0.5,
+    "action": "EMERGENCY. Possible meningitis. Refer to facility immediately. Check fontanelle.",
+    "alert_type": "NEUROLOGICAL_DISTRESS"
+  },
+  "RESPIRATORY_DISTRESS": {
+    "description": "Weak breathy cry \u2014 respiratory distress at birth",
+    "clinical_source": "WHO Essential Newborn Care 2024: Weak cry at birth = immediate assessment",
+    "severity": "CRITICAL",
+    "pitch_hz_min": 100,
+    "pitch_hz_max": 250,
+    "burst_duration_min_seconds": 2.0,
+    "amplitude_threshold": "LOW",
+    "action": "EMERGENCY. Begin newborn resuscitation. Refer immediately.",
+    "alert_type": "RESPIRATORY_DISTRESS"
+  },
+  "PAIN": {
+    "description": "Intense sustained cry \u2014 pain response",
+    "clinical_source": "Neonatal cry research: Sustained high cry = pain or discomfort",
+    "severity": "HIGH",
+    "pitch_hz_min": 300,
+    "pitch_hz_max": 500,
+    "burst_duration_min_seconds": 1.0,
+    "burst_duration_max_seconds": 3.0,
+    "action": "Assess for injury, infection, or feeding difficulty. Monitor closely.",
+    "alert_type": "PAIN_CRY"
+  },
+  "HUNGER": {
+    "description": "Rhythmic repetitive cry \u2014 hunger or discomfort",
+    "clinical_source": "Neonatal cry research: Rhythmic pattern = hunger or basic need",
+    "severity": "LOW",
+    "pitch_hz_min": 250,
+    "pitch_hz_max": 380,
+    "rhythmic": true,
+    "action": "Feed the baby. Check nappy. Monitor for escalation.",
+    "alert_type": "HUNGER_CRY"
+  },
+  "NORMAL": {
+    "description": "Normal healthy vigorous cry",
+    "clinical_source": "WHO Essential Newborn Care: Vigorous cry within 30 seconds = healthy",
+    "severity": "LOW",
+    "pitch_hz_min": 250,
+    "pitch_hz_max": 400,
+    "action": "No action required. Continue routine monitoring.",
+    "alert_type": "NORMAL"
+  }
+}

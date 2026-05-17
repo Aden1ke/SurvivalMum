@@ -4,8 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Hdd
-import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material.icons.filled.SignalWifiOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -13,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,7 +30,7 @@ fun AIStatusIndicator(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Icon(
-            imageVector = Icons.Default.WifiOff,
+            imageVector = Icons.Default.SignalWifiOff,
             contentDescription = "Offline",
             modifier = Modifier.size(14.dp),
             tint = MaterialTheme.colorScheme.onSecondaryContainer
@@ -45,9 +43,9 @@ fun AIStatusIndicator(
             ),
             color = MaterialTheme.colorScheme.onSecondaryContainer
         )
-        
+
         Spacer(modifier = Modifier.width(4.dp))
-        
+
         // Gemma 4 Badge
         Box(
             modifier = Modifier

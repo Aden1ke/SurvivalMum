@@ -7,13 +7,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.Modifier
-import com.survivemum.app.ui.screens.DesignSystemDemoScreen
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -29,55 +22,47 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.rememberNavController
+import com.survivemum.app.data.SurviveMumDatabase
 import com.survivemum.app.ml.CameraManager
 import com.survivemum.app.ml.GemmaManager
 import com.survivemum.app.ml.VitalAnalyzer
-import com.survivemum.app.ui.theme.SurvivalMumTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.compose.rememberNavController
-import com.survivemum.app.data.SurviveMumDatabase
-import com.survivemum.app.ml.GemmaManager
 import com.survivemum.app.navigation.NavGraph
+import com.survivemum.app.security.SecurityModule
+import com.survivemum.app.ui.screens.DesignSystemDemoScreen
 import com.survivemum.app.ui.screens.applyLanguage
 import com.survivemum.app.ui.theme.SurvivalMumTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class MainActivity : ComponentActivity() {
+
+    /**
+     * Container for the security layer — audit log, safety screener,
+     * alert dispatcher, battery monitor, model router.
+     *
+     * Initialized once in onCreate and held for the activity's lifetime.
+     */
+    private lateinit var securityModule: SecurityModule
 
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var gemmaManager: GemmaManager
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            // Permission granted
-        }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        cameraExecutor = Executors.newSingleThreadExecutor()
-        gemmaManager = GemmaManager(this)
-
-        // Initialize Gemma in background
     ) { /* permission result handled inside composables */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // ── Apply saved language BEFORE UI loads ──────────────────────────────
-        // This ensures the correct language is shown from the first frame
+        // Ensures the correct language is shown from the first frame.
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val db   = SurviveMumDatabase.getDatabase(this@MainActivity)
+                val db = SurviveMumDatabase.getDatabase(this@MainActivity)
                 val user = db.userDao().getCurrentUser()
                 val lang = user?.language ?: "en"
                 runOnUiThread {
@@ -91,13 +76,22 @@ class MainActivity : ComponentActivity() {
         // ── Camera executor ───────────────────────────────────────────────────
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        // ── Gemma model — load in background ─────────────────────────────────
+        // ── Gemma model — create instance and start loading in background ────
+        // We create the GemmaManager reference now (cheap, just allocates the
+        // object), but the actual model load runs on IO. SecurityModule below
+        // gets the reference and the safety screener will call into Gemma once
+        // it's loaded. While loading, Layer 2 returns SAFE and Layer 1 still works.
         gemmaManager = GemmaManager(this)
         lifecycleScope.launch(Dispatchers.IO) {
             gemmaManager.initializeModel("gemma4.bin")
         }
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+        // ── Security layer (with Gemma as Layer 2 safety classifier) ──────────
+        // Creates the safety audit database, starts the connectivity listener,
+        // wires Gemma into the safety screener, and prepares the alert dispatcher
+        // to receive queued alerts gated by two-layer safety screening.
+        securityModule = SecurityModule(applicationContext, gemmaManager)
+
         // ── Camera permission ─────────────────────────────────────────────────
         if (ContextCompat.checkSelfPermission(
                 this, Manifest.permission.CAMERA
@@ -112,15 +106,11 @@ class MainActivity : ComponentActivity() {
             SurvivalMumTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    DesignSystemDemoScreen()
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    CameraScreen(
-                        cameraExecutor = cameraExecutor,
-                        gemmaManager = gemmaManager,
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    containerColor = MaterialTheme.colorScheme.background,
+                    contentWindowInsets = WindowInsets(0, 0, 0, 0)
+                ) { _ ->
+                    val navController = rememberNavController()
+                    NavGraph(navController = navController)
                 }
             }
         }
@@ -173,14 +163,9 @@ fun CameraScreen(
                 val startTime = System.currentTimeMillis()
                 val result = withContext(Dispatchers.IO) {
                     gemmaManager.assess(
-                        pregnancyHistory = "Patient has history of mild hypertension. Last 3 visits BP: 130/85, 132/88, 135/90.",
-                        currentQuery = "Current heart rate is ${heartRate.toInt()} BPM and SpO2 is ${spo2.toInt()}%. Please assess risk."
+                        clinicalSituation = "Current heart rate is ${heartRate.toInt()} BPM and SpO2 is ${spo2.toInt()}%. Patient has history of mild hypertension. Last 3 visits BP: 130/85, 132/88, 135/90. Please assess risk.",
+                        patientName = "the patient"
                     )
-                    containerColor = MaterialTheme.colorScheme.background,
-                    contentWindowInsets = WindowInsets(0, 0, 0, 0)
-                ) { _ ->
-                    val navController = rememberNavController()
-                    NavGraph(navController = navController)
                 }
                 inferenceSpeed = System.currentTimeMillis() - startTime
                 aiAssessment = result
@@ -318,8 +303,5 @@ fun ThemeDemoPreview() {
 fun ThemeDemoDarkPreview() {
     SurvivalMumTheme(darkTheme = true) {
         ThemeDemoScreen()
-    override fun onDestroy() {
-        super.onDestroy()
-        cameraExecutor.shutdown()
     }
 }

@@ -1,0 +1,2611 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SurviveMum — The Silent Guardian</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            :root {
+                --dahlia: #bc093c;
+                --dahlia-dark: #8c0028;
+                --carnation: #f3c1bb;
+                --baby-breath: #efeee8;
+                --teal: #4e8c8a;
+                --dewy: #5bb8b2;
+                --dark: #2c1a1f;
+                --pea: #878d60;
+                --matcha: #b3b5a1;
+                --text: #2c1a1f;
+                --text-soft: #6b5b5e;
+            }
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            html {
+                scroll-behavior: smooth;
+            }
+            body {
+                font-family: "DM Sans", sans-serif;
+                background: var(--baby-breath);
+                color: var(--text);
+                overflow-x: hidden;
+            }
+            nav {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 100;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 20px 48px;
+                background: rgba(239, 238, 232, 0.92);
+                backdrop-filter: blur(12px);
+                border-bottom: 1px solid rgba(188, 9, 60, 0.1);
+            }
+            .nav-logo {
+                font-family: "Playfair Display", serif;
+                font-size: 22px;
+                font-weight: 900;
+                color: var(--dahlia);
+            }
+            .nav-links {
+                display: flex;
+                gap: 32px;
+            }
+            .nav-links a {
+                font-size: 14px;
+                font-weight: 500;
+                color: var(--text-soft);
+                text-decoration: none;
+                transition: color 0.2s;
+            }
+            .nav-links a:hover {
+                color: var(--dahlia);
+            }
+            .nav-cta {
+                background: var(--dahlia);
+                color: #fff !important;
+                padding: 10px 22px;
+                border-radius: 8px;
+                font-weight: 600 !important;
+            }
+            .nav-cta:hover {
+                background: var(--dahlia-dark) !important;
+            }
+            section {
+                padding: 100px 48px;
+            }
+            .section-label {
+                font-family: "DM Mono", monospace;
+                font-size: 11px;
+                font-weight: 500;
+                color: var(--dahlia);
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                margin-bottom: 16px;
+            }
+            .section-title {
+                font-family: "Playfair Display", serif;
+                font-size: clamp(32px, 4vw, 52px);
+                font-weight: 900;
+                line-height: 1.1;
+                letter-spacing: -1px;
+                color: var(--dark);
+                margin-bottom: 20px;
+            }
+            .section-sub {
+                font-size: 17px;
+                font-weight: 300;
+                color: var(--text-soft);
+                line-height: 1.7;
+                max-width: 560px;
+            }
+            @keyframes pulse {
+                0%,
+                100% {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+                50% {
+                    opacity: 0.5;
+                    transform: scale(1.4);
+                }
+            }
+            @keyframes float {
+                0%,
+                100% {
+                    transform: translateY(0);
+                }
+                50% {
+                    transform: translateY(-20px);
+                }
+            }
+
+            /* HERO */
+            .hero {
+                min-height: 100vh;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                align-items: center;
+                padding: 120px 48px 80px;
+                gap: 64px;
+                position: relative;
+                overflow: hidden;
+            }
+            .hero::before {
+                content: "";
+                position: absolute;
+                top: -200px;
+                right: -200px;
+                width: 600px;
+                height: 600px;
+                background: radial-gradient(
+                    circle,
+                    rgba(188, 9, 60, 0.08) 0%,
+                    transparent 70%
+                );
+                border-radius: 50%;
+            }
+            .hero-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: rgba(188, 9, 60, 0.08);
+                border: 1px solid rgba(188, 9, 60, 0.2);
+                color: var(--dahlia);
+                font-size: 12px;
+                font-weight: 600;
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                padding: 8px 16px;
+                border-radius: 100px;
+                margin-bottom: 32px;
+            }
+            .hero-badge::before {
+                content: "";
+                width: 6px;
+                height: 6px;
+                background: var(--dahlia);
+                border-radius: 50%;
+                animation: pulse 2s infinite;
+            }
+            .hero-title {
+                font-family: "Playfair Display", serif;
+                font-size: clamp(48px, 5vw, 72px);
+                font-weight: 900;
+                line-height: 1.05;
+                letter-spacing: -2px;
+                margin-bottom: 24px;
+                color: var(--dark);
+            }
+            .hero-title span {
+                color: var(--dahlia);
+            }
+            .hero-sub {
+                font-size: 18px;
+                font-weight: 300;
+                color: var(--text-soft);
+                line-height: 1.7;
+                margin-bottom: 48px;
+                max-width: 480px;
+            }
+            .hero-stat {
+                display: flex;
+                gap: 40px;
+                margin-bottom: 48px;
+            }
+            .stat-num {
+                font-family: "Playfair Display", serif;
+                font-size: 36px;
+                font-weight: 900;
+                color: var(--dahlia);
+                line-height: 1;
+            }
+            .stat-label {
+                font-size: 12px;
+                font-weight: 500;
+                color: var(--text-soft);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-top: 4px;
+            }
+            .hero-actions {
+                display: flex;
+                gap: 16px;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            .btn-primary {
+                background: var(--dahlia);
+                color: #fff;
+                padding: 16px 32px;
+                border-radius: 10px;
+                font-size: 15px;
+                font-weight: 600;
+                text-decoration: none;
+                transition: all 0.2s;
+                box-shadow: 0 4px 20px rgba(188, 9, 60, 0.25);
+            }
+            .btn-primary:hover {
+                background: var(--dahlia-dark);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 32px rgba(188, 9, 60, 0.35);
+            }
+            .btn-secondary {
+                color: var(--text);
+                font-size: 15px;
+                font-weight: 500;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: color 0.2s;
+            }
+            .btn-secondary:hover {
+                color: var(--dahlia);
+            }
+            .hero-right {
+                position: relative;
+                z-index: 1;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .phone-wrap {
+                position: relative;
+                animation: float 6s ease-in-out infinite;
+            }
+            .phone {
+                width: 260px;
+                background: var(--dark);
+                border-radius: 40px;
+                padding: 16px;
+                box-shadow:
+                    0 40px 80px rgba(44, 26, 31, 0.4),
+                    0 0 0 1px rgba(188, 9, 60, 0.2),
+                    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            }
+            .phone-screen {
+                background: #1a0f12;
+                border-radius: 28px;
+                overflow: hidden;
+                aspect-ratio: 9/19;
+                display: flex;
+                flex-direction: column;
+            }
+            .phone-header {
+                background: var(--dark);
+                padding: 16px;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+            }
+            .phone-brand {
+                font-family: "Playfair Display", serif;
+                font-size: 14px;
+                font-weight: 900;
+                color: var(--dahlia);
+            }
+            .phone-status {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                font-family: "DM Mono", monospace;
+                font-size: 8px;
+                color: var(--dewy);
+            }
+            .dot {
+                width: 5px;
+                height: 5px;
+                background: var(--dewy);
+                border-radius: 50%;
+                animation: pulse 2s infinite;
+            }
+            .phone-camera {
+                flex: 1;
+                background: linear-gradient(160deg, #1a1a1a 0%, #0d0d0d 100%);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 12px;
+            }
+            .camera-label {
+                font-family: "DM Mono", monospace;
+                font-size: 7px;
+                color: rgba(255, 255, 255, 0.4);
+                letter-spacing: 1px;
+                text-transform: uppercase;
+            }
+            .vitals-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            .vital {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 8px;
+                padding: 8px;
+            }
+            .vital-label {
+                font-size: 7px;
+                color: rgba(255, 255, 255, 0.4);
+                letter-spacing: 0.5px;
+            }
+            .vital-val {
+                font-family: "DM Mono", monospace;
+                font-size: 16px;
+                font-weight: 500;
+                color: var(--dewy);
+                line-height: 1.2;
+            }
+            .vital-unit {
+                font-size: 7px;
+                color: rgba(255, 255, 255, 0.4);
+            }
+            .alert-bar {
+                background: var(--dahlia);
+                margin: 8px;
+                border-radius: 8px;
+                padding: 10px 12px;
+            }
+            .alert-label {
+                font-size: 7px;
+                color: rgba(255, 255, 255, 0.7);
+                letter-spacing: 1px;
+                text-transform: uppercase;
+            }
+            .alert-type {
+                font-size: 10px;
+                font-weight: 700;
+                color: #fff;
+                margin-top: 2px;
+            }
+            .thinking-panel {
+                background: rgba(44, 26, 31, 0.8);
+                margin: 8px;
+                border-radius: 8px;
+                padding: 10px;
+                border: 1px solid rgba(188, 9, 60, 0.3);
+            }
+            .thinking-title {
+                font-family: "DM Mono", monospace;
+                font-size: 6px;
+                color: var(--dewy);
+                letter-spacing: 1px;
+                text-transform: uppercase;
+                margin-bottom: 6px;
+            }
+            .thinking-step {
+                display: flex;
+                gap: 6px;
+                align-items: flex-start;
+                margin-bottom: 4px;
+            }
+            .step-dot {
+                width: 4px;
+                height: 4px;
+                background: var(--dewy);
+                border-radius: 50%;
+                margin-top: 3px;
+                flex-shrink: 0;
+            }
+            .step-text {
+                font-size: 6px;
+                color: rgba(255, 255, 255, 0.6);
+                line-height: 1.4;
+            }
+            .float-badge {
+                position: absolute;
+                background: #fff;
+                border-radius: 12px;
+                padding: 10px 14px;
+                box-shadow: 0 8px 24px rgba(44, 26, 31, 0.15);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--dark);
+                white-space: nowrap;
+                animation: float 6s ease-in-out infinite;
+            }
+            .badge-left {
+                left: -80px;
+                top: 30%;
+                animation-delay: -2s;
+            }
+            .badge-right {
+                right: -80px;
+                top: 55%;
+                animation-delay: -4s;
+            }
+
+            /* STORY */
+            .story {
+                background: var(--dark);
+            }
+            .story .section-label {
+                color: var(--carnation);
+            }
+            .story .section-title {
+                color: var(--baby-breath);
+            }
+            .story-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 80px;
+                align-items: center;
+                margin-top: 48px;
+            }
+            .story-text {
+                font-size: 17px;
+                color: rgba(239, 238, 232, 0.75);
+                line-height: 1.9;
+            }
+            .story-text p {
+                margin-bottom: 20px;
+            }
+            .story-highlight {
+                background: rgba(188, 9, 60, 0.15);
+                border-left: 3px solid var(--dahlia);
+                padding: 20px 24px;
+                border-radius: 0 12px 12px 0;
+                margin: 24px 0;
+                font-style: italic;
+                color: var(--carnation);
+                font-size: 16px;
+                line-height: 1.7;
+            }
+            .story-outcome {
+                background: rgba(239, 238, 232, 0.05);
+                border: 1px solid rgba(239, 238, 232, 0.1);
+                border-radius: 16px;
+                padding: 28px;
+                margin-top: 32px;
+            }
+            .story-outcome-title {
+                font-family: "DM Mono", monospace;
+                font-size: 10px;
+                color: var(--dewy);
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                margin-bottom: 12px;
+            }
+            .story-outcome-text {
+                font-size: 14px;
+                color: rgba(239, 238, 232, 0.6);
+                line-height: 1.7;
+            }
+            .story-visual {
+                background: rgba(239, 238, 232, 0.04);
+                border: 1px solid rgba(239, 238, 232, 0.08);
+                border-radius: 24px;
+                padding: 40px;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+            .story-stat-big {
+                text-align: center;
+                padding: 32px;
+                background: rgba(188, 9, 60, 0.1);
+                border-radius: 16px;
+                border: 1px solid rgba(188, 9, 60, 0.2);
+            }
+            .story-stat-num {
+                font-family: "Playfair Display", serif;
+                font-size: 64px;
+                font-weight: 900;
+                color: var(--dahlia);
+                line-height: 1;
+            }
+            .story-stat-label {
+                font-size: 14px;
+                color: rgba(239, 238, 232, 0.6);
+                margin-top: 8px;
+                line-height: 1.5;
+            }
+            .story-stats-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .story-stat-small {
+                background: rgba(239, 238, 232, 0.04);
+                border: 1px solid rgba(239, 238, 232, 0.08);
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+            }
+            .story-stat-small-num {
+                font-family: "Playfair Display", serif;
+                font-size: 32px;
+                font-weight: 900;
+                color: var(--carnation);
+            }
+            .story-stat-small-label {
+                font-size: 11px;
+                color: rgba(239, 238, 232, 0.4);
+                margin-top: 6px;
+                line-height: 1.4;
+            }
+
+            /* DIFFERENT */
+            .different {
+                background: #fff;
+            }
+            .different-intro {
+                max-width: 700px;
+                margin: 0 auto 64px;
+                text-align: center;
+            }
+            .different-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 32px;
+            }
+            .diff-card {
+                border-radius: 20px;
+                padding: 36px;
+            }
+            .diff-other {
+                background: var(--baby-breath);
+                border: 1px solid rgba(44, 26, 31, 0.08);
+            }
+            .diff-survive {
+                background: var(--dark);
+            }
+            .diff-tag {
+                display: inline-block;
+                font-family: "DM Mono", monospace;
+                font-size: 10px;
+                font-weight: 500;
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                padding: 6px 12px;
+                border-radius: 100px;
+                margin-bottom: 20px;
+            }
+            .diff-tag-other {
+                background: rgba(44, 26, 31, 0.08);
+                color: var(--text-soft);
+            }
+            .diff-tag-survive {
+                background: rgba(188, 9, 60, 0.2);
+                color: var(--carnation);
+            }
+            .diff-title {
+                font-family: "Playfair Display", serif;
+                font-size: 22px;
+                font-weight: 700;
+                margin-bottom: 20px;
+            }
+            .diff-title-other {
+                color: var(--dark);
+            }
+            .diff-title-survive {
+                color: var(--baby-breath);
+            }
+            .diff-list {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .diff-item {
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+            .diff-item-other {
+                color: var(--text-soft);
+            }
+            .diff-item-survive {
+                color: rgba(239, 238, 232, 0.75);
+            }
+            .diff-x {
+                color: var(--matcha);
+                font-size: 16px;
+                flex-shrink: 0;
+                margin-top: 1px;
+            }
+            .diff-check {
+                color: var(--dewy);
+                font-size: 16px;
+                flex-shrink: 0;
+                margin-top: 1px;
+            }
+
+            /* LAYERS */
+            .layers {
+                background: var(--baby-breath);
+            }
+            .layers-header {
+                text-align: center;
+                margin-bottom: 64px;
+            }
+            .layers-header .section-sub {
+                margin: 0 auto;
+            }
+            .layers-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 24px;
+            }
+            .layer-card {
+                background: #fff;
+                border-radius: 20px;
+                padding: 36px;
+                border: 1px solid rgba(44, 26, 31, 0.06);
+                transition: all 0.3s;
+                position: relative;
+                overflow: hidden;
+            }
+            .layer-card::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+            }
+            .layer-mother::before {
+                background: var(--teal);
+            }
+            .layer-newborn::before {
+                background: var(--carnation);
+            }
+            .layer-data::before {
+                background: var(--pea);
+            }
+            .layer-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 20px 48px rgba(44, 26, 31, 0.1);
+            }
+            .layer-emoji {
+                font-size: 40px;
+                margin-bottom: 20px;
+                display: block;
+            }
+            .layer-title {
+                font-family: "Playfair Display", serif;
+                font-size: 22px;
+                font-weight: 700;
+                color: var(--dark);
+                margin-bottom: 12px;
+            }
+            .layer-desc {
+                font-size: 14px;
+                color: var(--text-soft);
+                line-height: 1.7;
+            }
+            .layer-features {
+                margin-top: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .layer-feature {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 13px;
+                color: var(--text-soft);
+            }
+            .layer-feature::before {
+                content: "✓";
+                width: 18px;
+                height: 18px;
+                background: rgba(188, 9, 60, 0.08);
+                color: var(--dahlia);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                font-weight: 700;
+                flex-shrink: 0;
+            }
+
+            /* CAPABILITIES */
+            .capabilities {
+                background: var(--dark);
+            }
+            .capabilities .section-label {
+                color: var(--dewy);
+            }
+            .capabilities .section-title {
+                color: var(--baby-breath);
+            }
+            .capabilities-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
+                margin-top: 48px;
+            }
+            .cap-card {
+                background: rgba(239, 238, 232, 0.04);
+                border: 1px solid rgba(239, 238, 232, 0.08);
+                border-radius: 16px;
+                padding: 28px;
+                transition: all 0.3s;
+            }
+            .cap-card:hover {
+                background: rgba(239, 238, 232, 0.08);
+                border-color: rgba(188, 9, 60, 0.3);
+            }
+            .cap-num {
+                font-family: "DM Mono", monospace;
+                font-size: 11px;
+                color: var(--dahlia);
+                letter-spacing: 1px;
+                margin-bottom: 12px;
+            }
+            .cap-title {
+                font-size: 15px;
+                font-weight: 600;
+                color: var(--baby-breath);
+                margin-bottom: 8px;
+            }
+            .cap-desc {
+                font-size: 13px;
+                color: rgba(239, 238, 232, 0.5);
+                line-height: 1.6;
+            }
+
+            /* CTA */
+            .cta-section {
+                background: var(--dahlia);
+                text-align: center;
+                padding: 100px 48px;
+            }
+            .cta-title {
+                font-family: "Playfair Display", serif;
+                font-size: clamp(36px, 4vw, 56px);
+                font-weight: 900;
+                color: #fff;
+                line-height: 1.1;
+                margin-bottom: 20px;
+            }
+            .cta-sub {
+                font-size: 18px;
+                font-weight: 300;
+                color: rgba(255, 255, 255, 0.8);
+                margin-bottom: 48px;
+            }
+            .cta-actions {
+                display: flex;
+                gap: 16px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .btn-white {
+                background: #fff;
+                color: var(--dahlia);
+                padding: 16px 32px;
+                border-radius: 10px;
+                font-size: 15px;
+                font-weight: 700;
+                text-decoration: none;
+                transition: all 0.2s;
+            }
+            .btn-white:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            }
+            .btn-outline-white {
+                border: 2px solid rgba(255, 255, 255, 0.5);
+                color: #fff;
+                padding: 14px 32px;
+                border-radius: 10px;
+                font-size: 15px;
+                font-weight: 600;
+                text-decoration: none;
+                transition: all 0.2s;
+            }
+            .btn-outline-white:hover {
+                background: rgba(255, 255, 255, 0.1);
+                border-color: #fff;
+            }
+
+            footer {
+                background: var(--dark);
+                padding: 48px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 24px;
+            }
+            .footer-logo {
+                font-family: "Playfair Display", serif;
+                font-size: 20px;
+                font-weight: 900;
+                color: var(--dahlia);
+            }
+            .footer-sub {
+                font-size: 12px;
+                color: rgba(239, 238, 232, 0.4);
+                margin-top: 4px;
+            }
+            .footer-links {
+                display: flex;
+                gap: 24px;
+            }
+            .footer-links a {
+                font-size: 13px;
+                color: rgba(239, 238, 232, 0.5);
+                text-decoration: none;
+                transition: color 0.2s;
+            }
+            .footer-links a:hover {
+                color: var(--carnation);
+            }
+            .footer-right {
+                font-size: 12px;
+                color: rgba(239, 238, 232, 0.3);
+                text-align: right;
+            }
+
+            @media (max-width: 900px) {
+                nav {
+                    padding: 16px 24px;
+                }
+                .nav-links {
+                    display: none;
+                }
+                .hero {
+                    grid-template-columns: 1fr;
+                    padding: 100px 24px 60px;
+                    gap: 48px;
+                }
+                .hero-right {
+                    order: -1;
+                }
+                .phone {
+                    width: 200px;
+                }
+                .badge-left,
+                .badge-right {
+                    display: none;
+                }
+                section {
+                    padding: 64px 24px;
+                }
+                .story-grid,
+                .different-grid,
+                .layers-grid,
+                .capabilities-grid {
+                    grid-template-columns: 1fr;
+                    gap: 24px;
+                }
+
+                /* Get The App — force single column */
+                .get-app-grid {
+                    display: grid !important;
+                    grid-template-columns: 1fr !important;
+                    gap: 40px !important;
+                }
+                .install-steps-grid {
+                    display: grid !important;
+                    grid-template-columns: 1fr !important;
+                    gap: 16px !important;
+                }
+                #download {
+                    padding: 64px 24px !important;
+                }
+                #faq {
+                    padding: 64px 24px !important;
+                }
+                .faq-item {
+                    padding: 18px 20px !important;
+                }
+
+                footer {
+                    flex-direction: column;
+                    text-align: center;
+                    padding: 32px 24px;
+                }
+                .footer-right {
+                    text-align: center;
+                }
+            }
+            @media (max-width: 480px) {
+                .hero-stat {
+                    flex-wrap: wrap;
+                    gap: 20px;
+                }
+                .hero-actions {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+                .btn-primary {
+                    width: 100%;
+                    text-align: center;
+                    display: block;
+                }
+                .cta-actions {
+                    flex-direction: column;
+                    align-items: center;
+                }
+                .btn-white,
+                .btn-outline-white {
+                    width: 100%;
+                    text-align: center;
+                }
+                /* Download buttons full width on small screens */
+                #download a[class="download-btn"] {
+                    width: 100%;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <nav>
+            <div class="nav-logo">SurviveMum</div>
+            <div class="nav-links">
+                <a href="#story">Our Story</a>
+                <a href="#different">Why Different</a>
+                <a href="#how">How It Works</a>
+                <a href="#download">Get The App</a>
+                <a href="#faq">FAQ</a>
+                <a href="https://github.com/Aden1ke/SurvivalMum" target="_blank"
+                    >GitHub</a
+                >
+                <a href="#" target="_blank" class="nav-cta">Watch Demo</a>
+            </div>
+        </nav>
+
+        <!-- HERO -->
+        <section class="hero">
+            <div style="position: relative; z-index: 1">
+                <div class="hero-badge">
+                    Gemma 4 Good Hackathon · Google DeepMind
+                </div>
+                <h1 class="hero-title">
+                    The Silent<br /><span>Guardian</span>
+                </h1>
+                <p class="hero-sub">
+                    An AI that watches when patients cannot speak. Runs 100%
+                    offline on an $80 Android phone. No internet. No cloud. Just
+                    Gemma 4  silently watching every mother and newborn.
+                </p>
+                <div class="hero-stat">
+                    <div>
+                        <div class="stat-num">2.3M</div>
+                        <div class="stat-label">
+                            Newborns die<br />in first 28 days
+                        </div>
+                    </div>
+                    <div>
+                        <div class="stat-num">23%</div>
+                        <div class="stat-label">
+                            Maternal deaths<br />from PPH in Nigeria
+                        </div>
+                    </div>
+                    <div>
+                        <div class="stat-num">$80</div>
+                        <div class="stat-label">Target device<br />cost</div>
+                    </div>
+                </div>
+                <div class="hero-actions">
+                    <a
+                        href="https://github.com/Aden1ke/SurvivalMum"
+                        target="_blank"
+                        class="btn-primary"
+                        >View on GitHub</a
+                    >
+                    <a href="#story" class="btn-secondary">Read our story →</a>
+                </div>
+            </div>
+            <div class="hero-right">
+                <div class="phone-wrap">
+                    <div class="float-badge badge-left">
+                        <span style="font-size: 18px">❤️</span>
+                        <div>
+                            <div
+                                style="
+                                    font-size: 10px;
+                                    color: #6b5b5e;
+                                    font-weight: 400;
+                                "
+                            >
+                                Heart Rate
+                            </div>
+                            <div>78 BPM</div>
+                        </div>
+                    </div>
+                    <div class="phone">
+                        <div class="phone-screen">
+                            <div class="phone-header">
+                                <div>
+                                    <div class="phone-brand">SurviveMum</div>
+                                    <div
+                                        style="
+                                            font-size: 8px;
+                                            color: rgba(239, 238, 232, 0.4);
+                                            margin-top: 2px;
+                                        "
+                                    >
+                                        The Silent Guardian
+                                    </div>
+                                </div>
+                                <div class="phone-status">
+                                    <div class="dot"></div>
+                                    OFFLINE AI
+                                </div>
+                            </div>
+                            <div class="phone-camera">
+                                <div class="camera-label">
+                                    Camera Monitor · Live
+                                </div>
+                                <div class="vitals-row">
+                                    <div class="vital">
+                                        <div class="vital-label">
+                                            HEART RATE
+                                        </div>
+                                        <div class="vital-val">78</div>
+                                        <div class="vital-unit">BPM</div>
+                                    </div>
+                                    <div class="vital">
+                                        <div class="vital-label">SPO₂</div>
+                                        <div class="vital-val">98</div>
+                                        <div class="vital-unit">%</div>
+                                    </div>
+                                    <div class="vital">
+                                        <div class="vital-label">RESP RATE</div>
+                                        <div class="vital-val">16</div>
+                                        <div class="vital-unit">RPM</div>
+                                    </div>
+                                    <div class="vital">
+                                        <div class="vital-label">RISK</div>
+                                        <div
+                                            class="vital-val"
+                                            style="
+                                                color: #878d60;
+                                                font-size: 12px;
+                                            "
+                                        >
+                                            LOW
+                                        </div>
+                                        <div class="vital-unit">STABLE</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert-bar">
+                                <div class="alert-label">⚠ ALERT DETECTED</div>
+                                <div class="alert-type">PREECLAMPSIA RISK</div>
+                            </div>
+                            <div class="thinking-panel">
+                                <div class="thinking-title">
+                                    AI Reasoning Trace
+                                </div>
+                                <div class="thinking-step">
+                                    <div class="step-dot"></div>
+                                    <div class="step-text">
+                                        BP trend: +28 systolic over 4 visits
+                                    </div>
+                                </div>
+                                <div class="thinking-step">
+                                    <div class="step-dot"></div>
+                                    <div class="step-text">
+                                        WHO threshold 140/90 exceeded
+                                    </div>
+                                </div>
+                                <div class="thinking-step">
+                                    <div class="step-dot"></div>
+                                    <div class="step-text">
+                                        Facial oedema detected via camera
+                                    </div>
+                                </div>
+                                <div class="thinking-step">
+                                    <div
+                                        class="step-dot"
+                                        style="background: var(--dahlia)"
+                                    ></div>
+                                    <div
+                                        class="step-text"
+                                        style="color: var(--carnation)"
+                                    >
+                                        Risk: CRITICAL — Refer immediately
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="float-badge badge-right">
+                        <span style="font-size: 18px">👶</span>
+                        <div>
+                            <div
+                                style="
+                                    font-size: 10px;
+                                    color: #6b5b5e;
+                                    font-weight: 400;
+                                "
+                            >
+                                Cry Analysis
+                            </div>
+                            <div style="color: #bc093c">DISTRESS</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STORY -->
+        <section class="story" id="story">
+            <div class="section-label">Why We Built This</div>
+            <h2 class="section-title" style="color: var(--baby-breath)">
+                A story that should<br />never happen again
+            </h2>
+            <div class="story-grid">
+                <div>
+                    <div class="story-text">
+                        <p>
+                            When I was little, my pregnant aunt got sick. But
+                            nobody noticed quickly enough. She did not feel
+                            well, the warning signs were there, but without
+                            anyone watching, without any way to know, the danger
+                            crept in silently.
+                        </p>
+                        <p>
+                            By the time she almost fainted, it was too late to
+                            prevent what had already happened inside the womb.
+                            The baby had suffered an injury. That injury did not
+                            heal before birth.
+                        </p>
+                        <div class="story-highlight">
+                            "My cousin was born with a hole in her back (spina
+                            bifida). A condition that could have been caught.
+                            Could have been treated. Could have been prevented
+                            if someone had been watching earlier."
+                        </div>
+                        <p>
+                            After weeks in hospital and surgery, the doctors
+                            confirmed what the family feared. My cousin will not
+                            have full control of her bladder she does not know
+                            when she needs the bathroom. She was also born with
+                            clubfoot. She is still treating this today.
+                        </p>
+                        <p>
+                            This is not a rare story. Across Nigeria, across
+                            Africa, across the world — this story repeats every
+                            single day. Mothers who do not know they are in
+                            danger. Babies who pay the price. Families who live
+                            with consequences that were never inevitable.
+                        </p>
+                        <div class="story-outcome">
+                            <div class="story-outcome-title">
+                                What SurviveMum changes
+                            </div>
+                            <div class="story-outcome-text">
+                                If a phone had been watching my aunt reading
+                                her vital signs, tracking her blood pressure
+                                trends, alerting a Traditional Birth Attendant
+                                before she almost fainted my cousin might have
+                                been born healthy. That phone exists now. That
+                                AI exists now. SurviveMum is built for every
+                                family that should never have to go through what
+                                mine did.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="story-visual">
+                    <div class="story-stat-big">
+                        <div class="story-stat-num">1st</div>
+                        <div class="story-stat-label">
+                            The first delay failure to recognise danger —
+                            causes the majority of preventable maternal and
+                            neonatal deaths
+                        </div>
+                    </div>
+                    <div class="story-stats-row">
+                        <div class="story-stat-small">
+                            <div class="story-stat-small-num">512</div>
+                            <div class="story-stat-small-label">
+                                Maternal deaths per 100K live births in Nigeria
+                            </div>
+                        </div>
+                        <div class="story-stat-small">
+                            <div class="story-stat-small-num">2.3M</div>
+                            <div class="story-stat-small-label">
+                                Newborns who die in their first 28 days every
+                                year
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        style="
+                            background: rgba(188, 9, 60, 0.15);
+                            border: 1px solid rgba(188, 9, 60, 0.3);
+                            border-radius: 16px;
+                            padding: 24px;
+                        "
+                    >
+                        <div
+                            style="
+                                font-family: &quot;DM Mono&quot;, monospace;
+                                font-size: 10px;
+                                color: var(--carnation);
+                                letter-spacing: 1px;
+                                text-transform: uppercase;
+                                margin-bottom: 12px;
+                            "
+                        >
+                            What could have helped
+                        </div>
+                        <div
+                            style="
+                                display: flex;
+                                flex-direction: column;
+                                gap: 10px;
+                            "
+                        >
+                            <div
+                                style="
+                                    display: flex;
+                                    gap: 10px;
+                                    align-items: center;
+                                    font-size: 13px;
+                                    color: rgba(239, 238, 232, 0.7);
+                                "
+                            >
+                                <span style="color: var(--dewy)">✓</span>
+                                Real-time vital sign monitoring
+                            </div>
+                            <div
+                                style="
+                                    display: flex;
+                                    gap: 10px;
+                                    align-items: center;
+                                    font-size: 13px;
+                                    color: rgba(239, 238, 232, 0.7);
+                                "
+                            >
+                                <span style="color: var(--dewy)">✓</span> Blood
+                                pressure trend detection
+                            </div>
+                            <div
+                                style="
+                                    display: flex;
+                                    gap: 10px;
+                                    align-items: center;
+                                    font-size: 13px;
+                                    color: rgba(239, 238, 232, 0.7);
+                                "
+                            >
+                                <span style="color: var(--dewy)">✓</span> Early
+                                warning before crisis
+                            </div>
+                            <div
+                                style="
+                                    display: flex;
+                                    gap: 10px;
+                                    align-items: center;
+                                    font-size: 13px;
+                                    color: rgba(239, 238, 232, 0.7);
+                                "
+                            >
+                                <span style="color: var(--dewy)">✓</span>
+                                Automatic referral to hospital
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DIFFERENT -->
+        <section class="different" id="different">
+            <div class="different-intro">
+                <div class="section-label">Why SurviveMum Is Different</div>
+                <h2 class="section-title">
+                    Not another health app.<br />A silent guardian.
+                </h2>
+                <p class="section-sub" style="margin: 0 auto">
+                    Every health app ever built waits for the user to open it,
+                    tap something, enter data. SurviveMum watches — without
+                    being asked, without internet, without touching the patient.
+                </p>
+            </div>
+            <div class="different-grid">
+                <div class="diff-card diff-other">
+                    <div class="diff-tag diff-tag-other">Other Health Apps</div>
+                    <h3 class="diff-title diff-title-other">
+                        Reactive. Connected. Passive.
+                    </h3>
+                    <div class="diff-list">
+                        <div class="diff-item diff-item-other">
+                            <span class="diff-x">✗</span>Wait for the patient to
+                            report symptoms
+                        </div>
+                        <div class="diff-item diff-item-other">
+                            <span class="diff-x">✗</span>Require internet for AI
+                            features
+                        </div>
+                        <div class="diff-item diff-item-other">
+                            <span class="diff-x">✗</span>Single data point — no
+                            trend detection
+                        </div>
+                        <div class="diff-item diff-item-other">
+                            <span class="diff-x">✗</span>Cannot monitor a
+                            sleeping patient
+                        </div>
+                        <div class="diff-item diff-item-other">
+                            <span class="diff-x">✗</span>Require physical
+                            devices on the body
+                        </div>
+                        <div class="diff-item diff-item-other">
+                            <span class="diff-x">✗</span>Generic AI — not
+                            trained on Nigerian data
+                        </div>
+                        <div class="diff-item diff-item-other">
+                            <span class="diff-x">✗</span>Cannot classify newborn
+                            cry types
+                        </div>
+                        <div class="diff-item diff-item-other">
+                            <span class="diff-x">✗</span>Referral letters
+                            written manually
+                        </div>
+                        <div class="diff-item diff-item-other">
+                            <span class="diff-x">✗</span>English only
+                        </div>
+                        <div class="diff-item diff-item-other">
+                            <span class="diff-x">✗</span>Requires expensive
+                            devices
+                        </div>
+                    </div>
+                </div>
+                <div class="diff-card diff-survive">
+                    <div class="diff-tag diff-tag-survive">SurviveMum</div>
+                    <h3 class="diff-title diff-title-survive">
+                        Proactive. Offline. Silent.
+                    </h3>
+                    <div class="diff-list">
+                        <div class="diff-item diff-item-survive">
+                            <span class="diff-check">✓</span>Watches
+                            continuously — no input needed from patient
+                        </div>
+                        <div class="diff-item diff-item-survive">
+                            <span class="diff-check">✓</span>100% offline —
+                            works where there is no internet
+                        </div>
+                        <div class="diff-item diff-item-survive">
+                            <span class="diff-check">✓</span>Tracks trends
+                            across months of pregnancy visits
+                        </div>
+                        <div class="diff-item diff-item-survive">
+                            <span class="diff-check">✓</span>Monitors via camera
+                            — no consciousness needed
+                        </div>
+                        <div class="diff-item diff-item-survive">
+                            <span class="diff-check">✓</span>rPPG extracts
+                            vitals without touching the body
+                        </div>
+                        <div class="diff-item diff-item-survive">
+                            <span class="diff-check">✓</span>Fine-tuned on
+                            Nigeria MDSR maternal death data
+                        </div>
+                        <div class="diff-item diff-item-survive">
+                            <span class="diff-check">✓</span>Classifies baby cry
+                            — 4 clinical categories in real time
+                        </div>
+                        <div class="diff-item diff-item-survive">
+                            <span class="diff-check">✓</span>Auto-generates
+                            referral letter in 3 seconds
+                        </div>
+                        <div class="diff-item diff-item-survive">
+                            <span class="diff-check">✓</span>Hausa, Yoruba,
+                            Igbo, Nigerian Pidgin
+                        </div>
+                        <div class="diff-item diff-item-survive">
+                            <span class="diff-check">✓</span>Runs on any $80
+                            Android phone
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LAYERS -->
+        <section class="layers" id="how">
+            <div class="layers-header">
+                <div class="section-label">Three Layers of Life</div>
+                <h2 class="section-title">One phone. Three guardians.</h2>
+                <p class="section-sub">
+                    SurviveMum monitors every stage from pregnancy through the
+                    first five years — silently, continuously, offline.
+                </p>
+            </div>
+            <div class="layers-grid">
+                <div class="layer-card layer-mother">
+                    <span class="layer-emoji">🤱</span>
+                    <div class="layer-title">The Mother</div>
+                    <p class="layer-desc">
+                        Camera reads vital signs without touching her body.
+                        Gemma reads handwritten ANC cards. Tracks blood pressure
+                        trends across months. Alerts before she knows something
+                        is wrong.
+                    </p>
+                    <div class="layer-features">
+                        <div class="layer-feature">
+                            rPPG heart rate via skin colour changes
+                        </div>
+                        <div class="layer-feature">
+                            ANC card handwriting OCR
+                        </div>
+                        <div class="layer-feature">
+                            Blood pressure trend detection
+                        </div>
+                        <div class="layer-feature">
+                            Preeclampsia early warning
+                        </div>
+                    </div>
+                </div>
+                <div class="layer-card layer-newborn">
+                    <span class="layer-emoji">👶</span>
+                    <div class="layer-title">The Newborn</div>
+                    <p class="layer-desc">
+                        Phone listens to the cry. High-pitched short bursts flag
+                        possible meningitis. Weak breathy cry signals
+                        respiratory distress. Camera watches skin for jaundice.
+                        The baby is never touched.
+                    </p>
+                    <div class="layer-features">
+                        <div class="layer-feature">
+                            Real-time cry classification
+                        </div>
+                        <div class="layer-feature">
+                            Respiratory rate from chest movement
+                        </div>
+                        <div class="layer-feature">
+                            Jaundice detection from skin colour
+                        </div>
+                        <div class="layer-feature">
+                            Four clinical cry categories
+                        </div>
+                    </div>
+                </div>
+                <div class="layer-card layer-data">
+                    <span class="layer-emoji">📊</span>
+                    <div class="layer-title">The Record</div>
+                    <p class="layer-desc">
+                        Complete pregnancy history from week 1 to now. QR code
+                        carries the entire record. Any facility scans it and
+                        instantly has her full history. The broken record chain
+                        between facilities is solved.
+                    </p>
+                    <div class="layer-features">
+                        <div class="layer-feature">
+                            128K context — entire pregnancy in memory
+                        </div>
+                        <div class="layer-feature">
+                            QR code portable health record
+                        </div>
+                        <div class="layer-feature">
+                            Referral letter in Hausa, Yoruba, Igbo
+                        </div>
+                        <div class="layer-feature">
+                            Full medical audit trail
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CAPABILITIES -->
+        <section class="capabilities">
+            <div class="section-label">Gemma 4 Capabilities</div>
+            <h2 class="section-title" style="color: var(--baby-breath)">
+                Six capabilities.<br />All load-bearing.
+            </h2>
+            <div class="capabilities-grid">
+                <div class="cap-card">
+                    <div class="cap-num">01 — Thinking Traces</div>
+                    <div class="cap-title">Clinical Reasoning Visible</div>
+                    <p class="cap-desc">
+                        Every alert shows Gemma's complete reasoning — which
+                        guideline it applied, which threshold was crossed. The
+                        TBA sees exactly why the alert fired.
+                    </p>
+                </div>
+                <div class="cap-card">
+                    <div class="cap-num">02 — Native Function Calling</div>
+                    <div class="cap-title">Auto-Generated Referrals</div>
+                    <p class="cap-desc">
+                        When an alert fires, Gemma writes a complete medical
+                        referral letter in 3 seconds — in Hausa, Yoruba, or
+                        Igbo. It reaches the hospital before the mother arrives.
+                    </p>
+                </div>
+                <div class="cap-card">
+                    <div class="cap-num">03 — LiteRT Edge Deploy</div>
+                    <div class="cap-title">$80 Android Phone</div>
+                    <p class="cap-desc">
+                        Gemma 4 runs entirely on-device using LiteRT. No
+                        internet required. No cloud. Works in communities hours
+                        from the nearest hospital.
+                    </p>
+                </div>
+                <div class="cap-card">
+                    <div class="cap-num">04 — On-Device RAG</div>
+                    <div class="cap-title">WHO Guidelines On-Device</div>
+                    <p class="cap-desc">
+                        Before every assessment, Gemma retrieves the most
+                        relevant WHO guideline from a local FAISS index. Every
+                        recommendation is grounded in verifiable clinical
+                        evidence.
+                    </p>
+                </div>
+                <div class="cap-card">
+                    <div class="cap-num">05 — Unsloth Fine-Tuning</div>
+                    <div class="cap-title">Nigerian Clinical Intelligence</div>
+                    <p class="cap-desc">
+                        Fine-tuned on Nigeria MDSR maternal death audit
+                        patterns. Training loss reduced from 8.2 to 2.4 across
+                        650 steps over 50 clinical records.
+                    </p>
+                </div>
+                <div class="cap-card">
+                    <div class="cap-num">06 — Audio Multimodal</div>
+                    <div class="cap-title">Cry Classification</div>
+                    <p class="cap-desc">
+                        High-pitched short bursts → possible meningitis. Weak
+                        breathy cry → respiratory distress. Four clinical
+                        categories classified in real time from the phone
+                        microphone.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- GET THE APP -->
+        <section style="background: #fff; padding: 100px 48px" id="download">
+            <div
+                class="get-app-grid"
+                style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 80px;
+                    align-items: center;
+                "
+            >
+                <div>
+                    <div class="section-label">Get The App</div>
+                    <h2 class="section-title">
+                        Download SurviveMum<br />free and open source
+                    </h2>
+                    <p class="section-sub">
+                        No subscription. No cloud account. No data harvesting.
+                        Download the APK, install on any Android phone, and
+                        start protecting mothers and newborns immediately.
+                    </p>
+
+                    <div
+                        style="
+                            margin-top: 40px;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 12px;
+                        "
+                    >
+                        <a
+                            href="https://github.com/Aden1ke/SurvivalMum/releases"
+                            target="_blank"
+                            class="download-btn"
+                            style="
+                                display: flex;
+                                align-items: center;
+                                gap: 16px;
+                                background: var(--dahlia);
+                                color: #fff;
+                                padding: 18px 24px;
+                                border-radius: 12px;
+                                text-decoration: none;
+                                transition: all 0.2s;
+                                box-shadow: 0 4px 20px rgba(188, 9, 60, 0.25);
+                            "
+                            onmouseover="
+                                this.style.background = '#8C0028';
+                                this.style.transform = 'translateY(-2px)';
+                            "
+                            onmouseout="
+                                this.style.background = '#BC093C';
+                                this.style.transform = 'translateY(0)';
+                            "
+                        >
+                            <span style="font-size: 28px">📱</span>
+                            <div>
+                                <div
+                                    style="
+                                        font-size: 11px;
+                                        opacity: 0.8;
+                                        letter-spacing: 1px;
+                                        text-transform: uppercase;
+                                        font-weight: 500;
+                                    "
+                                >
+                                    Download APK
+                                </div>
+                                <div style="font-size: 17px; font-weight: 700">
+                                    SurviveMum for Android
+                                </div>
+                            </div>
+                            <span style="margin-left: auto; font-size: 20px"
+                                >→</span
+                            >
+                        </a>
+
+                        <a
+                            href="https://github.com/Aden1ke/SurvivalMum"
+                            target="_blank"
+                            class="download-btn"
+                            style="
+                                display: flex;
+                                align-items: center;
+                                gap: 16px;
+                                background: var(--dark);
+                                color: var(--baby-breath);
+                                padding: 18px 24px;
+                                border-radius: 12px;
+                                text-decoration: none;
+                                transition: all 0.2s;
+                            "
+                            onmouseover="this.style.opacity = '.85'"
+                            onmouseout="this.style.opacity = '1'"
+                        >
+                            <span style="font-size: 28px">💻</span>
+                            <div>
+                                <div
+                                    style="
+                                        font-size: 11px;
+                                        opacity: 0.6;
+                                        letter-spacing: 1px;
+                                        text-transform: uppercase;
+                                        font-weight: 500;
+                                    "
+                                >
+                                    Open Source
+                                </div>
+                                <div style="font-size: 17px; font-weight: 700">
+                                    View on GitHub
+                                </div>
+                            </div>
+                            <span style="margin-left: auto; font-size: 20px"
+                                >→</span
+                            >
+                        </a>
+                    </div>
+
+                    <p
+                        style="
+                            font-size: 12px;
+                            color: var(--matcha);
+                            margin-top: 16px;
+                        "
+                    >
+                        Apache 2.0 licensed · Free forever · No login required
+                    </p>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 16px">
+                    <div
+                        style="
+                            font-family: &quot;DM Mono&quot;, monospace;
+                            font-size: 11px;
+                            color: var(--dahlia);
+                            letter-spacing: 2px;
+                            text-transform: uppercase;
+                            margin-bottom: 8px;
+                        "
+                    >
+                        Device Requirements
+                    </div>
+
+                    <div
+                        style="
+                            background: var(--baby-breath);
+                            border-radius: 16px;
+                            padding: 24px;
+                            display: flex;
+                            gap: 16px;
+                            align-items: flex-start;
+                        "
+                    >
+                        <span style="font-size: 24px; flex-shrink: 0">✅</span>
+                        <div>
+                            <div
+                                style="
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    color: var(--dark);
+                                    margin-bottom: 4px;
+                                "
+                            >
+                                Android 8.0 or higher
+                            </div>
+                            <div
+                                style="font-size: 13px; color: var(--text-soft)"
+                            >
+                                Any Android phone released after 2018. This
+                                covers the vast majority of phones in Nigeria
+                                including budget devices.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="
+                            background: var(--baby-breath);
+                            border-radius: 16px;
+                            padding: 24px;
+                            display: flex;
+                            gap: 16px;
+                            align-items: flex-start;
+                        "
+                    >
+                        <span style="font-size: 24px; flex-shrink: 0">✅</span>
+                        <div>
+                            <div
+                                style="
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    color: var(--dark);
+                                    margin-bottom: 4px;
+                                "
+                            >
+                                At least 3GB RAM
+                            </div>
+                            <div
+                                style="font-size: 13px; color: var(--text-soft)"
+                            >
+                                Required to run the Gemma 4 AI model on-device.
+                                Most phones above ₦50,000 meet this requirement.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="
+                            background: var(--baby-breath);
+                            border-radius: 16px;
+                            padding: 24px;
+                            display: flex;
+                            gap: 16px;
+                            align-items: flex-start;
+                        "
+                    >
+                        <span style="font-size: 24px; flex-shrink: 0">✅</span>
+                        <div>
+                            <div
+                                style="
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    color: var(--dark);
+                                    margin-bottom: 4px;
+                                "
+                            >
+                                2GB free storage
+                            </div>
+                            <div
+                                style="font-size: 13px; color: var(--text-soft)"
+                            >
+                                The Gemma 4 model file is 1.3GB. Downloaded once
+                                on first launch — no internet needed after that.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="
+                            background: var(--baby-breath);
+                            border-radius: 16px;
+                            padding: 24px;
+                            display: flex;
+                            gap: 16px;
+                            align-items: flex-start;
+                        "
+                    >
+                        <span style="font-size: 24px; flex-shrink: 0">✅</span>
+                        <div>
+                            <div
+                                style="
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    color: var(--dark);
+                                    margin-bottom: 4px;
+                                "
+                            >
+                                Front-facing camera
+                            </div>
+                            <div
+                                style="font-size: 13px; color: var(--text-soft)"
+                            >
+                                For rPPG vital sign monitoring. Standard on all
+                                modern smartphones. No external sensors
+                                required.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="
+                            background: rgba(188, 9, 60, 0.05);
+                            border: 1px solid rgba(188, 9, 60, 0.15);
+                            border-radius: 16px;
+                            padding: 20px;
+                            display: flex;
+                            gap: 12px;
+                            align-items: center;
+                        "
+                    >
+                        <span style="font-size: 20px">💡</span>
+                        <div style="font-size: 13px; color: var(--text-soft)">
+                            Works on
+                            <strong style="color: var(--dark)"
+                                >Tecno, Infinix, Samsung, Itel</strong
+                            >
+                            and all popular Nigerian phone brands.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How to install -->
+            <div style="margin-top: 80px">
+                <div style="text-align: center; margin-bottom: 48px">
+                    <div class="section-label">How To Install</div>
+                    <h2
+                        class="section-title"
+                        style="font-size: clamp(24px, 3vw, 36px)"
+                    >
+                        Three steps to get started
+                    </h2>
+                </div>
+                <div
+                    class="install-steps-grid"
+                    style="
+                        display: grid;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 24px;
+                    "
+                >
+                    <div
+                        style="
+                            background: var(--baby-breath);
+                            border-radius: 20px;
+                            padding: 32px;
+                            position: relative;
+                        "
+                    >
+                        <div
+                            style="
+                                font-family:
+                                    &quot;Playfair Display&quot;, serif;
+                                font-size: 64px;
+                                font-weight: 900;
+                                color: rgba(188, 9, 60, 0.1);
+                                line-height: 1;
+                                margin-bottom: 16px;
+                            "
+                        >
+                            01
+                        </div>
+                        <div
+                            style="
+                                font-size: 16px;
+                                font-weight: 700;
+                                color: var(--dark);
+                                margin-bottom: 8px;
+                            "
+                        >
+                            Download the APK
+                        </div>
+                        <div
+                            style="
+                                font-size: 14px;
+                                color: var(--text-soft);
+                                line-height: 1.6;
+                            "
+                        >
+                            Go to GitHub Releases and download the latest
+                            <code
+                                style="
+                                    background: rgba(44, 26, 31, 0.06);
+                                    padding: 2px 6px;
+                                    border-radius: 4px;
+                                    font-size: 12px;
+                                "
+                                >survivemum.apk</code
+                            >
+                            file to your phone.
+                        </div>
+                    </div>
+                    <div
+                        style="
+                            background: var(--baby-breath);
+                            border-radius: 20px;
+                            padding: 32px;
+                        "
+                    >
+                        <div
+                            style="
+                                font-family:
+                                    &quot;Playfair Display&quot;, serif;
+                                font-size: 64px;
+                                font-weight: 900;
+                                color: rgba(188, 9, 60, 0.1);
+                                line-height: 1;
+                                margin-bottom: 16px;
+                            "
+                        >
+                            02
+                        </div>
+                        <div
+                            style="
+                                font-size: 16px;
+                                font-weight: 700;
+                                color: var(--dark);
+                                margin-bottom: 8px;
+                            "
+                        >
+                            Allow installation
+                        </div>
+                        <div
+                            style="
+                                font-size: 14px;
+                                color: var(--text-soft);
+                                line-height: 1.6;
+                            "
+                        >
+                            Go to Settings → Security → enable
+                            <strong>Install from Unknown Sources</strong>. This
+                            allows APK files from outside the Play Store. Tap
+                            the downloaded file to install.
+                        </div>
+                    </div>
+                    <div
+                        style="
+                            background: var(--baby-breath);
+                            border-radius: 20px;
+                            padding: 32px;
+                        "
+                    >
+                        <div
+                            style="
+                                font-family:
+                                    &quot;Playfair Display&quot;, serif;
+                                font-size: 64px;
+                                font-weight: 900;
+                                color: rgba(188, 9, 60, 0.1);
+                                line-height: 1;
+                                margin-bottom: 16px;
+                            "
+                        >
+                            03
+                        </div>
+                        <div
+                            style="
+                                font-size: 16px;
+                                font-weight: 700;
+                                color: var(--dark);
+                                margin-bottom: 8px;
+                            "
+                        >
+                            Create your account
+                        </div>
+                        <div
+                            style="
+                                font-size: 14px;
+                                color: var(--text-soft);
+                                line-height: 1.6;
+                            "
+                        >
+                            Open the app, choose your role (TBA or Mother),
+                            enter your details, set a 4-digit PIN, and start
+                            monitoring. The AI loads automatically in the
+                            background.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section style="background: var(--dark); padding: 100px 48px" id="faq">
+            <div style="text-align: center; margin-bottom: 64px">
+                <div class="section-label" style="color: var(--dewy)">
+                    Frequently Asked Questions
+                </div>
+                <h2 class="section-title" style="color: var(--baby-breath)">
+                    Everything you need<br />to know
+                </h2>
+            </div>
+
+            <div
+                style="
+                    max-width: 800px;
+                    margin: 0 auto;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                "
+                id="faq-list"
+            >
+                <div
+                    class="faq-item"
+                    onclick="toggleFaq(this)"
+                    style="
+                        background: rgba(239, 238, 232, 0.04);
+                        border-radius: 12px;
+                        padding: 24px 28px;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                        margin-bottom: 2px;
+                    "
+                >
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            gap: 16px;
+                        "
+                    >
+                        <div
+                            style="
+                                font-size: 16px;
+                                font-weight: 600;
+                                color: var(--baby-breath);
+                            "
+                        >
+                            Does SurviveMum work without internet?
+                        </div>
+                        <span
+                            class="faq-arrow"
+                            style="
+                                color: var(--dahlia);
+                                font-size: 20px;
+                                flex-shrink: 0;
+                                transition: transform 0.3s;
+                            "
+                            >+</span
+                        >
+                    </div>
+                    <div
+                        class="faq-answer"
+                        style="
+                            display: none;
+                            margin-top: 16px;
+                            font-size: 14px;
+                            color: rgba(239, 238, 232, 0.6);
+                            line-height: 1.7;
+                        "
+                    >
+                        Yes — 100% offline. The Gemma 4 AI model, WHO clinical
+                        guidelines, cry classification rules, and all patient
+                        data are stored on the device. The app has never made a
+                        network call for any clinical feature. Internet is only
+                        used once during initial setup to download the Gemma
+                        model file (1.3GB). After that, the app works in the
+                        most remote communities with no signal.
+                    </div>
+                </div>
+
+                <div
+                    class="faq-item"
+                    onclick="toggleFaq(this)"
+                    style="
+                        background: rgba(239, 238, 232, 0.04);
+                        border-radius: 12px;
+                        padding: 24px 28px;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                        margin-bottom: 2px;
+                    "
+                >
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            gap: 16px;
+                        "
+                    >
+                        <div
+                            style="
+                                font-size: 16px;
+                                font-weight: 600;
+                                color: var(--baby-breath);
+                            "
+                        >
+                            Is my patient data safe and private?
+                        </div>
+                        <span
+                            class="faq-arrow"
+                            style="
+                                color: var(--dahlia);
+                                font-size: 20px;
+                                flex-shrink: 0;
+                                transition: transform 0.3s;
+                            "
+                            >+</span
+                        >
+                    </div>
+                    <div
+                        class="faq-answer"
+                        style="
+                            display: none;
+                            margin-top: 16px;
+                            font-size: 14px;
+                            color: rgba(239, 238, 232, 0.6);
+                            line-height: 1.7;
+                        "
+                    >
+                        Completely. All patient records, vital signs, alerts,
+                        and health history are stored in an encrypted local
+                        database on the device. Nothing is ever sent to a
+                        server, cloud, or any third party. If the phone is lost,
+                        patient data cannot be accessed without the PIN. We
+                        never see your data — it never leaves the device.
+                    </div>
+                </div>
+
+                <div
+                    class="faq-item"
+                    onclick="toggleFaq(this)"
+                    style="
+                        background: rgba(239, 238, 232, 0.04);
+                        border-radius: 12px;
+                        padding: 24px 28px;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                        margin-bottom: 2px;
+                    "
+                >
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            gap: 16px;
+                        "
+                    >
+                        <div
+                            style="
+                                font-size: 16px;
+                                font-weight: 600;
+                                color: var(--baby-breath);
+                            "
+                        >
+                            How does the camera measure vital signs?
+                        </div>
+                        <span
+                            class="faq-arrow"
+                            style="
+                                color: var(--dahlia);
+                                font-size: 20px;
+                                flex-shrink: 0;
+                                transition: transform 0.3s;
+                            "
+                            >+</span
+                        >
+                    </div>
+                    <div
+                        class="faq-answer"
+                        style="
+                            display: none;
+                            margin-top: 16px;
+                            font-size: 14px;
+                            color: rgba(239, 238, 232, 0.6);
+                            line-height: 1.7;
+                        "
+                    >
+                        The technique is called remote photoplethysmography
+                        (rPPG). When the heart beats, it pumps blood through the
+                        skin, causing very subtle colour changes that are
+                        invisible to the eye but detectable by a camera.
+                        SurviveMum uses the CHROM algorithm — which was
+                        specifically chosen because it performs well on darker
+                        skin tones, unlike standard RGB methods. The camera
+                        watches the mother's face and extracts heart rate and
+                        breathing rate from these colour changes over a 5-second
+                        window.
+                    </div>
+                </div>
+
+                <div
+                    class="faq-item"
+                    onclick="toggleFaq(this)"
+                    style="
+                        background: rgba(239, 238, 232, 0.04);
+                        border-radius: 12px;
+                        padding: 24px 28px;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                        margin-bottom: 2px;
+                    "
+                >
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            gap: 16px;
+                        "
+                    >
+                        <div
+                            style="
+                                font-size: 16px;
+                                font-weight: 600;
+                                color: var(--baby-breath);
+                            "
+                        >
+                            How does the cry classification work?
+                        </div>
+                        <span
+                            class="faq-arrow"
+                            style="
+                                color: var(--dahlia);
+                                font-size: 20px;
+                                flex-shrink: 0;
+                                transition: transform 0.3s;
+                            "
+                            >+</span
+                        >
+                    </div>
+                    <div
+                        class="faq-answer"
+                        style="
+                            display: none;
+                            margin-top: 16px;
+                            font-size: 14px;
+                            color: rgba(239, 238, 232, 0.6);
+                            line-height: 1.7;
+                        "
+                    >
+                        The phone microphone records the baby's cry and extracts
+                        two key features — pitch frequency (how high the sound
+                        is in Hz) and burst duration (how long each cry lasts).
+                        High-pitched cries above 400Hz in short bursts under 0.5
+                        seconds are associated with neurological distress and
+                        possible meningitis. Weak, breathy cries below 250Hz
+                        with long duration indicate respiratory distress. The
+                        app classifies into four categories: DISTRESS,
+                        RESPIRATORY DISTRESS, PAIN, and NORMAL — in real time.
+                    </div>
+                </div>
+
+                <div
+                    class="faq-item"
+                    onclick="toggleFaq(this)"
+                    style="
+                        background: rgba(239, 238, 232, 0.04);
+                        border-radius: 12px;
+                        padding: 24px 28px;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                        margin-bottom: 2px;
+                    "
+                >
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            gap: 16px;
+                        "
+                    >
+                        <div
+                            style="
+                                font-size: 16px;
+                                font-weight: 600;
+                                color: var(--baby-breath);
+                            "
+                        >
+                            What is a Traditional Birth Attendant (TBA)?
+                        </div>
+                        <span
+                            class="faq-arrow"
+                            style="
+                                color: var(--dahlia);
+                                font-size: 20px;
+                                flex-shrink: 0;
+                                transition: transform 0.3s;
+                            "
+                            >+</span
+                        >
+                    </div>
+                    <div
+                        class="faq-answer"
+                        style="
+                            display: none;
+                            margin-top: 16px;
+                            font-size: 14px;
+                            color: rgba(239, 238, 232, 0.6);
+                            line-height: 1.7;
+                        "
+                    >
+                        Traditional Birth Attendants are community health
+                        workers — often women — who assist with births and
+                        antenatal care in rural communities across Nigeria and
+                        Africa. They are often the only healthcare presence in
+                        communities hours from the nearest hospital. SurviveMum
+                        is designed to work in their hands, with a simple
+                        interface that requires no medical training, in Hausa,
+                        Yoruba, or Igbo.
+                    </div>
+                </div>
+
+                <div
+                    class="faq-item"
+                    onclick="toggleFaq(this)"
+                    style="
+                        background: rgba(239, 238, 232, 0.04);
+                        border-radius: 12px;
+                        padding: 24px 28px;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                        margin-bottom: 2px;
+                    "
+                >
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            gap: 16px;
+                        "
+                    >
+                        <div
+                            style="
+                                font-size: 16px;
+                                font-weight: 600;
+                                color: var(--baby-breath);
+                            "
+                        >
+                            Where do the clinical guidelines come from?
+                        </div>
+                        <span
+                            class="faq-arrow"
+                            style="
+                                color: var(--dahlia);
+                                font-size: 20px;
+                                flex-shrink: 0;
+                                transition: transform 0.3s;
+                            "
+                            >+</span
+                        >
+                    </div>
+                    <div
+                        class="faq-answer"
+                        style="
+                            display: none;
+                            margin-top: 16px;
+                            font-size: 14px;
+                            color: rgba(239, 238, 232, 0.6);
+                            line-height: 1.7;
+                        "
+                    >
+                        All clinical recommendations are grounded in WHO
+                        guidelines — WHO ANC Guidelines 2022, WHO Essential
+                        Newborn Care 2024, WHO PPH Management Guidelines, and
+                        WHO Maternal Sepsis recommendations. Before every Gemma
+                        assessment, the app searches a local database of 14
+                        clinical documents and retrieves the most relevant
+                        guideline. Every alert cites its source. No
+                        recommendation is generated without being grounded in a
+                        specific, verifiable WHO document.
+                    </div>
+                </div>
+
+                <div
+                    class="faq-item"
+                    onclick="toggleFaq(this)"
+                    style="
+                        background: rgba(239, 238, 232, 0.04);
+                        border-radius: 12px;
+                        padding: 24px 28px;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                        margin-bottom: 2px;
+                    "
+                >
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            gap: 16px;
+                        "
+                    >
+                        <div
+                            style="
+                                font-size: 16px;
+                                font-weight: 600;
+                                color: var(--baby-breath);
+                            "
+                        >
+                            Is SurviveMum a replacement for a doctor?
+                        </div>
+                        <span
+                            class="faq-arrow"
+                            style="
+                                color: var(--dahlia);
+                                font-size: 20px;
+                                flex-shrink: 0;
+                                transition: transform 0.3s;
+                            "
+                            >+</span
+                        >
+                    </div>
+                    <div
+                        class="faq-answer"
+                        style="
+                            display: none;
+                            margin-top: 16px;
+                            font-size: 14px;
+                            color: rgba(239, 238, 232, 0.6);
+                            line-height: 1.7;
+                        "
+                    >
+                        No. SurviveMum is a monitoring and early warning tool —
+                        not a diagnostic device. It is designed to help
+                        Traditional Birth Attendants and community health
+                        workers recognise danger signs earlier and refer
+                        patients to the appropriate facility faster. Every
+                        critical alert instructs the TBA to refer the patient
+                        immediately. The app closes the first delay — failure to
+                        recognise danger — it does not replace clinical care at
+                        the facility.
+                    </div>
+                </div>
+
+                <div
+                    class="faq-item"
+                    onclick="toggleFaq(this)"
+                    style="
+                        background: rgba(239, 238, 232, 0.04);
+                        border-radius: 12px;
+                        padding: 24px 28px;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                        margin-bottom: 2px;
+                    "
+                >
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            gap: 16px;
+                        "
+                    >
+                        <div
+                            style="
+                                font-size: 16px;
+                                font-weight: 600;
+                                color: var(--baby-breath);
+                            "
+                        >
+                            How much does SurviveMum cost?
+                        </div>
+                        <span
+                            class="faq-arrow"
+                            style="
+                                color: var(--dahlia);
+                                font-size: 20px;
+                                flex-shrink: 0;
+                                transition: transform 0.3s;
+                            "
+                            >+</span
+                        >
+                    </div>
+                    <div
+                        class="faq-answer"
+                        style="
+                            display: none;
+                            margin-top: 16px;
+                            font-size: 14px;
+                            color: rgba(239, 238, 232, 0.6);
+                            line-height: 1.7;
+                        "
+                    >
+                        Free. Completely free. No subscription, no in-app
+                        purchases, no premium tier. The app is open source under
+                        the Apache 2.0 licence. The only cost is the Android
+                        phone to run it on — which can be as inexpensive as $80.
+                        This was a deliberate design decision — the communities
+                        that need this most cannot afford subscription software.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-section">
+            <h2 class="cta-title">
+                The phone in a TBA's pocket<br />changes everything
+            </h2>
+            <p class="cta-sub">
+                My cousin lives with consequences that were never inevitable.
+                Let us make sure the next family does not have to.
+            </p>
+            <div class="cta-actions">
+                <a
+                    href="https://github.com/Aden1ke/SurvivalMum"
+                    target="_blank"
+                    class="btn-white"
+                    >View Source Code</a
+                >
+                <a href="#" class="btn-outline-white">Watch Demo Video</a>
+            </div>
+        </section>
+
+        <footer>
+            <div>
+                <div class="footer-logo">SurviveMum</div>
+                <div class="footer-sub">
+                    The Silent Guardian · Built for Gemma 4 Good Hackathon
+                </div>
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/Aden1ke/SurvivalMum" target="_blank"
+                    >GitHub</a
+                >
+                <a href="#">Demo Video</a>
+                <a
+                    href="https://kaggle.com/competitions/gemma-4-good-hackathon"
+                    target="_blank"
+                    >Kaggle</a
+                >
+            </div>
+            <div class="footer-right">
+                Apache 2.0 · Gemma 4 by Google DeepMind<br />© 2026 SurviveMum
+                Team
+            </div>
+        </footer>
+
+        <script>
+            function toggleFaq(item) {
+                const answer = item.querySelector(".faq-answer");
+                const arrow = item.querySelector(".faq-arrow");
+                const isOpen = answer.style.display === "block";
+
+                // Close all
+                document
+                    .querySelectorAll(".faq-answer")
+                    .forEach((a) => (a.style.display = "none"));
+                document.querySelectorAll(".faq-arrow").forEach((a) => {
+                    a.textContent = "+";
+                    a.style.transform = "rotate(0deg)";
+                });
+                document
+                    .querySelectorAll(".faq-item")
+                    .forEach(
+                        (i) => (i.style.background = "rgba(239,238,232,.04)")
+                    );
+
+                if (!isOpen) {
+                    answer.style.display = "block";
+                    arrow.textContent = "×";
+                    arrow.style.transform = "rotate(0deg)";
+                    item.style.background = "rgba(239,238,232,.08)";
+                }
+            }
+        </script>
+    </body>
+</html>
